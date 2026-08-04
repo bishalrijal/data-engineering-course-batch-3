@@ -1,0 +1,24 @@
+2026-08-03 19:12:19  INFO  Connecting to database…
+2026-08-03 19:12:19  INFO  Running: Revenue by city
+2026-08-03 19:12:19  INFO  Revenue by city: 11 rows returned
+2026-08-03 19:12:19  INFO  Connection closed. Done.
+2026-08-03 19:13:37  INFO  Connecting to database…
+2026-08-03 19:13:37  INFO  Running: Revenue by city
+2026-08-03 19:13:37  INFO  Revenue by city: 11 rows returned
+2026-08-03 19:13:37  INFO  Connection closed. Done.
+2026-08-03 19:14:18  INFO  Connecting to database…
+2026-08-03 19:14:18  INFO  Running: Revenue by city
+2026-08-03 19:14:18  INFO  Revenue by city: 11 rows returned
+2026-08-03 19:14:18  INFO  Connection closed. Done.
+2026-08-03 19:19:28  INFO  Connecting to database…
+2026-08-03 19:19:28  INFO  Running: Revenue by city
+2026-08-03 19:19:28  INFO  Revenue by city: 11 rows returned
+2026-08-03 19:19:28  INFO  Connection closed. Done.
+2026-08-03 19:19:41  INFO  Connecting to database…
+2026-08-03 19:19:41  INFO  Running: Revenue by city
+2026-08-03 19:19:42  INFO  Revenue by city: 11 rows returned
+2026-08-03 19:19:42  INFO  Running: Loyalty bonus drivers
+2026-08-03 19:19:42  INFO  Loyalty bonus drivers: 13 rows returned
+2026-08-03 19:19:42  INFO  Running: Outcomes by status
+2026-08-03 19:19:42  INFO  Outcomes by status: 3 rows returned
+2026-08-03 19:19:42  INFO  Connection closed. Done.
