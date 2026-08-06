@@ -17,4 +17,6 @@ A hands-on data engineering course covering the core tools and concepts used in 
 
 ## Week 3
 - [SQL Date & Time Functions — Cheatsheet](Week3/week3_datetime_functions_cheatsheet.html)
+- [Virtual Environments — Pre-read](Week3/week3_venv_preread.html)
+- [DB Connections with psycopg2 — Pre-read](Week3/week3_psycopg2_preread.html)
 - [Sample data setup](Week3/README.md)

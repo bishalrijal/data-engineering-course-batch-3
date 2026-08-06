@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 3 Pre-read — Virtual Environments</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:      #0F1B2D;
+    --navy2:     #162236;
+    --navy3:     #1D2E47;
+    --teal:      #00C9A7;
+    --teal-bg:   rgba(0,201,167,0.10);
+    --teal-bd:   rgba(0,201,167,0.28);
+    --white:     #F0F4F8;
+    --white2:    #D8E2EE;
+    --slate:     #8899AA;
+    --slate2:    #607080;
+    --code-bg:   #111D2E;
+    --code-bd:   #243347;
+    --amber:     #FFB347;
+    --amber-bg:  rgba(255,179,71,0.10);
+    --amber-bd:  rgba(255,179,71,0.28);
+    --purple:    #BD93F9;
+    --purple-bg: rgba(189,147,249,0.10);
+    --purple-bd: rgba(189,147,249,0.28);
+  }
+
+  code, pre { font-variant-ligatures: none; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  .page { max-width: 760px; margin: 0 auto; padding: 48px 24px 80px; }
+
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--teal);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  h1 { font-size: 30px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 14px; }
+
+  h2 {
+    font-size: 19px;
+    font-weight: 600;
+    margin: 40px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h2::before { content: ''; width: 3px; height: 18px; background: var(--teal); border-radius: 2px; flex-shrink: 0; }
+
+  p { color: var(--white2); margin-bottom: 12px; }
+  strong { color: var(--white); font-weight: 500; }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--teal);
+    background: var(--teal-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  .intro { font-size: 16px; padding-bottom: 24px; border-bottom: 1px solid var(--code-bd); margin-bottom: 8px; }
+
+  /* ── Callout ── */
+  .callout {
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 18px 0;
+    font-size: 14px;
+    display: flex;
+    gap: 12px;
+    background: var(--teal-bg);
+    border: 1px solid var(--teal-bd);
+    color: var(--white2);
+  }
+  .callout.warn { background: var(--amber-bg); border-color: var(--amber-bd); }
+  .callout span.ic { flex-shrink: 0; }
+  .callout strong { color: var(--white); }
+
+  /* ── Code block ── */
+  .code-wrap { background: var(--code-bg); border: 1px solid var(--code-bd); border-radius: 8px; margin: 16px 0; overflow: hidden; }
+  pre { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.7; color: var(--white); padding: 14px 16px; overflow-x: auto; }
+  .kw { color: #FF79C6; }
+  .fn { color: #50FA7B; }
+  .cm { color: #6272A4; }
+  .nm { color: #BD93F9; }
+  .st { color: #F1FA8C; }
+  .op { color: #FF79C6; }
+  .bi { color: #8BE9FD; }
+
+  /* ── Tabs ── */
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 20px 0 22px; }
+  .tab-btn {
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 500;
+    padding: 9px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--code-bd);
+    background: var(--navy2);
+    color: var(--white2);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { border-color: var(--teal); color: var(--white); }
+  .tab-btn.active { background: var(--teal-bg); border-color: var(--teal); color: var(--teal); }
+
+  /* ── Widget shell ── */
+  .widget { background: var(--navy2); border: 1px solid var(--code-bd); border-radius: 12px; padding: 24px; }
+  .tab-detail { display: none; }
+  .tab-detail.active { display: block; }
+  .tab-def { font-size: 15px; color: var(--white); margin-bottom: 4px; }
+  .tab-note { font-size: 12.5px; color: var(--slate); margin-bottom: 16px; }
+
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12px; color: var(--slate); margin: 14px 0; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+  .result-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--slate); margin: 18px 0 8px; }
+  table.result { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  table.result thead tr { border-bottom: 1px solid var(--teal-bd); }
+  table.result th { padding: 8px 10px; text-align: left; font-size: 10.5px; font-weight: 600; color: var(--teal); letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap; }
+  table.result th.computed { color: var(--amber); }
+  table.result td { padding: 9px 10px; border-bottom: 1px solid var(--code-bd); color: var(--white2); white-space: nowrap; }
+  table.result td.computed { color: var(--white); font-family: 'JetBrains Mono', monospace; font-size: 12.5px; }
+  .result-row { opacity: 0; transform: translateY(6px); transition: opacity 0.3s ease, transform 0.3s ease; border-left: 3px solid transparent; }
+  .result-row.show { opacity: 1; transform: translateY(0); }
+  .result-row.included { border-left-color: var(--teal); background: var(--teal-bg); }
+  .result-row.excluded { opacity: 0.32; }
+  .result-row.excluded.show { opacity: 0.32; }
+  .result-row.flag { border-left-color: var(--amber); background: var(--amber-bg); }
+  .badge { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--slate); background: var(--navy3); border: 1px solid var(--code-bd); padding: 1px 7px; border-radius: 4px; }
+
+  /* ── Plain tables (reference / mistakes) ── */
+  table.plain { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13.5px; }
+  table.plain thead tr { border-bottom: 1px solid var(--teal-bd); }
+  table.plain th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; color: var(--teal); letter-spacing: 0.06em; text-transform: uppercase; }
+  table.plain td { padding: 10px 14px; border-bottom: 1px solid var(--code-bd); color: var(--white2); vertical-align: top; }
+  table.plain tr:last-child td { border-bottom: none; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="eyebrow">Week 3 · Pre-read</div>
+  <h1>Virtual Environments</h1>
+  <p class="intro">
+    <code>sample_data_loader.py</code> needs <code>psycopg2-binary</code>, <code>Faker</code>, and
+    <code>python-dotenv</code>. Some other project on your machine might need a different, maybe
+    incompatible, version of one of those. A virtual environment is what keeps those two facts
+    from ever becoming a problem — a private, disposable copy of just the packages one project
+    needs, that doesn't touch anything else on the machine.
+  </p>
+
+  <h2>What a venv actually is</h2>
+  <p><code>python3 -m venv .venv</code> creates a folder containing its own Python interpreter
+  and its own empty <code>site-packages</code> directory. <strong>Activating</strong> it doesn't
+  install anything — it just rewrites your current shell's <code>PATH</code> so that
+  <code>python</code> and <code>pip</code> resolve to the copies inside <code>.venv/</code>
+  instead of the system ones. <code>deactivate</code> puts your <code>PATH</code> back. Nothing
+  about your system Python ever changes.</p>
+
+  <h2>venv vs conda</h2>
+  <table class="plain">
+    <thead><tr><th></th><th>venv</th><th>conda</th></tr></thead>
+    <tbody>
+      <tr><td>Comes with</td><td>Python itself — no separate install</td><td>A separate install (Anaconda / Miniconda)</td></tr>
+      <tr><td>Manages</td><td>Packages only</td><td>Packages <em>and</em> Python versions themselves</td></tr>
+      <tr><td>Best for</td><td>Regular Python projects — everything in this course</td><td>Data science stacks with compiled, non-Python dependencies</td></tr>
+      <tr><td>Use here</td><td>This is what Weeks 1–3 use</td><td>Only if you're already in a conda-based workflow</td></tr>
+    </tbody>
+  </table>
+
+  <h2>The workflow</h2>
+  <div class="code-wrap"><pre><span class="nm">$</span> python3 -m venv .venv                    <span class="cm"># create -- makes a .venv/ folder</span>
+<span class="nm">$</span> source .venv/bin/activate                <span class="cm"># activate (Windows: .venv\Scripts\activate)</span>
+(.venv) <span class="nm">$</span> pip install -r requirements.txt  <span class="cm"># install this project's dependencies</span>
+(.venv) <span class="nm">$</span> pip freeze <span class="op">></span> requirements.txt    <span class="cm"># snapshot exact versions, if you changed them</span>
+(.venv) <span class="nm">$</span> deactivate                       <span class="cm"># back to your normal system Python</span></pre></div>
+  <p>The <code>(.venv)</code> prefix most terminals add to your prompt is the tell — if it's not
+  there, nothing is activated and <code>pip install</code> is about to land somewhere you didn't
+  intend.</p>
+
+  <h2>Try it: the same install, with and without a venv</h2>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="noenv" onclick="applyTab('noenv')">no venv</button>
+    <button class="tab-btn" data-tab="env" onclick="applyTab('env')">with a venv</button>
+  </div>
+
+  <div class="widget">
+
+    <div class="tab-detail active" data-tab="noenv">
+      <p class="tab-def">Without an active venv, <code>pip install</code> lands in the system Python — visible to, and shared by, every project on the machine.</p>
+      <div class="code-wrap"><pre><span class="nm">$</span> pip install psycopg2-binary==2.9.5</pre></div>
+    </div>
+
+    <div class="tab-detail" data-tab="env">
+      <p class="tab-def">With a venv active, <code>pip install</code> only touches that project's own folder. The system Python, and every other project's venv, is untouched.</p>
+      <div class="code-wrap"><pre><span class="nm">$</span> python3 -m venv .venv
+<span class="nm">$</span> source .venv/bin/activate
+(.venv) <span class="nm">$</span> pip install psycopg2-binary==2.9.5</pre></div>
+    </div>
+
+    <div class="legend" id="legend-wrap">
+      <span class="legend-item"><span class="legend-dot" style="background:var(--teal)"></span>unaffected / isolated</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--amber)"></span>affected / in conflict</span>
+    </div>
+
+    <div class="result-label">Result</div>
+    <table class="result">
+      <thead id="result-head"></thead>
+      <tbody id="result-body"></tbody>
+    </table>
+
+  </div>
+
+  <h2>Reference</h2>
+  <table class="plain">
+    <thead><tr><th>Command</th><th>Does</th></tr></thead>
+    <tbody>
+      <tr><td><code>python3 -m venv &lt;dir&gt;</code></td><td>Create a new virtual environment in <code>&lt;dir&gt;</code></td></tr>
+      <tr><td><code>source &lt;dir&gt;/bin/activate</code></td><td>Activate it — affects only the current shell session</td></tr>
+      <tr><td><code>deactivate</code></td><td>Exit it, restore your normal <code>PATH</code></td></tr>
+      <tr><td><code>pip install -r requirements.txt</code></td><td>Install every package listed in the file</td></tr>
+      <tr><td><code>pip freeze</code></td><td>Print every installed package with its exact version</td></tr>
+      <tr><td><code>pip freeze &gt; requirements.txt</code></td><td>Save that list to a file</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Common mistakes</h2>
+  <table class="plain">
+    <thead><tr><th>Mistake</th><th>What goes wrong</th><th>Fix</th></tr></thead>
+    <tbody>
+      <tr><td>Installing before activating</td><td><code>pip install</code> lands in the system Python, defeating the entire point of the venv</td><td>Check for <code>(.venv)</code> in your prompt, or run <code>which python3</code>, before installing</td></tr>
+      <tr><td>Committing <code>.venv/</code> to git</td><td>Thousands of binary files, different on every OS, bloat the repo for no reason</td><td>Add <code>.venv/</code> to <code>.gitignore</code> (already done in this repo)</td></tr>
+      <tr><td><code>pip freeze &gt; requirements.txt</code> from a cluttered venv</td><td>Debugging tools and one-off packages you installed end up required for everyone else too</td><td>Keep <code>requirements.txt</code> to your project's real dependencies; freeze from a clean venv</td></tr>
+      <tr><td>Editor still pointing at the system Python</td><td><code>ModuleNotFoundError</code> for a package you're sure you installed</td><td>Explicitly select the venv's interpreter in your editor (VS Code: "Python: Select Interpreter")</td></tr>
+      <tr><td>Two terminal tabs, only one activated</td><td>The exact same script "works" in one tab and fails in the other</td><td>Activation is per-session — re-run <code>source .venv/bin/activate</code> in every new tab</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="ic">🎯</span>
+    <div><strong>You're ready</strong> when you can look at a terminal prompt and know, without running anything, whether a venv is active — and explain what <code>pip install</code> would actually do right now if you ran it.</div>
+  </div>
+
+</div>
+
+<script>
+  const TABS = {
+    noenv: {
+      cols: ['target'],
+      extraCols: [{ key: 'result', label: 'psycopg2-binary version seen' }],
+      rows: [
+        { target: 'This project', state: 'included', extra: { result: '2.9.5 (installed just now)' } },
+        { target: "Unrelated project needing 2.8.6", state: 'flag', extra: { result: '2.9.5 -- overwritten, now broken' } },
+        { target: 'System Python itself', state: 'flag', extra: { result: 'permanently modified' } }
+      ]
+    },
+    env: {
+      cols: ['target'],
+      extraCols: [{ key: 'result', label: 'psycopg2-binary version seen' }],
+      rows: [
+        { target: "This project's .venv", state: 'included', extra: { result: '2.9.5 (installed just now)' } },
+        { target: "Unrelated project's own venv", state: 'included', extra: { result: '2.8.6 -- untouched' } },
+        { target: 'System Python itself', state: 'included', extra: { result: 'untouched' } }
+      ]
+    }
+  };
+
+  const LABELS = { target: 'where' };
+
+  function applyTab(key) {
+    const cfg = TABS[key];
+
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === key));
+    document.querySelectorAll('.tab-detail').forEach(el => el.classList.toggle('active', el.dataset.tab === key));
+
+    const thead = document.getElementById('result-head');
+    const headCells = cfg.cols.map(c => '<th>' + LABELS[c] + '</th>').join('')
+      + cfg.extraCols.map(c => '<th class="computed">' + c.label + '</th>').join('');
+    thead.innerHTML = '<tr>' + headCells + '</tr>';
+
+    const tbody = document.getElementById('result-body');
+    tbody.innerHTML = '';
+    cfg.rows.forEach((row, i) => {
+      const tr = document.createElement('tr');
+      tr.className = 'result-row ' + row.state;
+
+      const baseCells = cfg.cols.map(c => '<td>' + escHtml(row[c]) + '</td>').join('');
+      const extraCells = cfg.extraCols.map(c => '<td class="computed">' + escHtml(row.extra[c.key]) + '</td>').join('');
+
+      tr.innerHTML = baseCells + extraCells;
+      tbody.appendChild(tr);
+      setTimeout(() => tr.classList.add('show'), i * 90);
+    });
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  applyTab('noenv');
+</script>
+</body>
+</html>

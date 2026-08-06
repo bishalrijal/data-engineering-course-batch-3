@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 3 Pre-read — DB Connections with psycopg2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:      #0F1B2D;
+    --navy2:     #162236;
+    --navy3:     #1D2E47;
+    --teal:      #00C9A7;
+    --teal-bg:   rgba(0,201,167,0.10);
+    --teal-bd:   rgba(0,201,167,0.28);
+    --white:     #F0F4F8;
+    --white2:    #D8E2EE;
+    --slate:     #8899AA;
+    --slate2:    #607080;
+    --code-bg:   #111D2E;
+    --code-bd:   #243347;
+    --amber:     #FFB347;
+    --amber-bg:  rgba(255,179,71,0.10);
+    --amber-bd:  rgba(255,179,71,0.28);
+    --purple:    #BD93F9;
+    --purple-bg: rgba(189,147,249,0.10);
+    --purple-bd: rgba(189,147,249,0.28);
+  }
+
+  code, pre { font-variant-ligatures: none; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  .page { max-width: 760px; margin: 0 auto; padding: 48px 24px 80px; }
+
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--teal);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  h1 { font-size: 30px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 14px; }
+
+  h2 {
+    font-size: 19px;
+    font-weight: 600;
+    margin: 40px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h2::before { content: ''; width: 3px; height: 18px; background: var(--teal); border-radius: 2px; flex-shrink: 0; }
+
+  p { color: var(--white2); margin-bottom: 12px; }
+  strong { color: var(--white); font-weight: 500; }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--teal);
+    background: var(--teal-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  .intro { font-size: 16px; padding-bottom: 24px; border-bottom: 1px solid var(--code-bd); margin-bottom: 8px; }
+
+  /* ── Callout ── */
+  .callout {
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 18px 0;
+    font-size: 14px;
+    display: flex;
+    gap: 12px;
+    background: var(--teal-bg);
+    border: 1px solid var(--teal-bd);
+    color: var(--white2);
+  }
+  .callout.warn { background: var(--amber-bg); border-color: var(--amber-bd); }
+  .callout span.ic { flex-shrink: 0; }
+  .callout strong { color: var(--white); }
+
+  /* ── Code block ── */
+  .code-wrap { background: var(--code-bg); border: 1px solid var(--code-bd); border-radius: 8px; margin: 16px 0; overflow: hidden; }
+  pre { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.7; color: var(--white); padding: 14px 16px; overflow-x: auto; }
+  .kw { color: #FF79C6; }
+  .fn { color: #50FA7B; }
+  .cm { color: #6272A4; }
+  .nm { color: #BD93F9; }
+  .st { color: #F1FA8C; }
+  .op { color: #FF79C6; }
+  .bi { color: #8BE9FD; }
+  .code-tag { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
+  .code-tag.bad { color: var(--amber); }
+  .code-tag.good { color: var(--teal); }
+
+  /* ── Flow diagram ── */
+  .flow { display: flex; align-items: stretch; gap: 8px; margin: 20px 0; flex-wrap: wrap; }
+  .flow-box {
+    flex: 1;
+    min-width: 130px;
+    background: var(--navy2);
+    border: 1px solid var(--code-bd);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .flow-box.hl { border-color: var(--teal-bd); background: var(--teal-bg); }
+  .flow-title { font-size: 13.5px; font-weight: 600; color: var(--white); margin-bottom: 4px; }
+  .flow-sub { font-size: 12px; color: var(--slate); line-height: 1.5; }
+  .flow-arrow { display: flex; align-items: center; justify-content: center; color: var(--slate); font-size: 18px; padding: 0 2px; }
+
+  /* ── Tabs ── */
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 20px 0 22px; }
+  .tab-btn {
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 500;
+    padding: 9px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--code-bd);
+    background: var(--navy2);
+    color: var(--white2);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { border-color: var(--teal); color: var(--white); }
+  .tab-btn.active { background: var(--teal-bg); border-color: var(--teal); color: var(--teal); }
+
+  /* ── Widget shell ── */
+  .widget { background: var(--navy2); border: 1px solid var(--code-bd); border-radius: 12px; padding: 24px; }
+  .tab-detail { display: none; }
+  .tab-detail.active { display: block; }
+  .tab-def { font-size: 15px; color: var(--white); margin-bottom: 4px; }
+  .tab-note { font-size: 12.5px; color: var(--slate); margin-bottom: 16px; }
+
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12px; color: var(--slate); margin: 14px 0; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+  .result-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--slate); margin: 18px 0 8px; }
+  table.result { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  table.result thead tr { border-bottom: 1px solid var(--teal-bd); }
+  table.result th { padding: 8px 10px; text-align: left; font-size: 10.5px; font-weight: 600; color: var(--teal); letter-spacing: 0.05em; text-transform: uppercase; }
+  table.result th.computed { color: var(--amber); }
+  table.result td { padding: 9px 10px; border-bottom: 1px solid var(--code-bd); color: var(--white2); }
+  table.result td.computed { color: var(--white); font-family: 'JetBrains Mono', monospace; font-size: 12.5px; }
+  .result-row { opacity: 0; transform: translateY(6px); transition: opacity 0.3s ease, transform 0.3s ease; border-left: 3px solid transparent; }
+  .result-row.show { opacity: 1; transform: translateY(0); }
+  .result-row.included { border-left-color: var(--teal); background: var(--teal-bg); }
+  .result-row.excluded { opacity: 0.32; }
+  .result-row.excluded.show { opacity: 0.32; }
+  .result-row.flag { border-left-color: var(--amber); background: var(--amber-bg); }
+  .badge { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--slate); background: var(--navy3); border: 1px solid var(--code-bd); padding: 1px 7px; border-radius: 4px; }
+
+  /* ── Plain tables (reference / mistakes) ── */
+  table.plain { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13.5px; }
+  table.plain thead tr { border-bottom: 1px solid var(--teal-bd); }
+  table.plain th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; color: var(--teal); letter-spacing: 0.06em; text-transform: uppercase; }
+  table.plain td { padding: 10px 14px; border-bottom: 1px solid var(--code-bd); color: var(--white2); vertical-align: top; }
+  table.plain tr:last-child td { border-bottom: none; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="eyebrow">Week 3 · Pre-read</div>
+  <h1>DB Connections with psycopg2</h1>
+  <p class="intro">
+    <code>sample_data_loader.py</code> already does all of this — <code>psycopg2.connect(...)</code>,
+    a cursor, <code>execute()</code>, <code>commit()</code>. This pre-read is what those calls
+    actually mean, so the script reads as logic instead of incantation. The two words to get
+    solid on: <strong>connection</strong> and <strong>cursor</strong> — they are not the same
+    thing, and mixing them up is where almost every confusing psycopg2 bug comes from.
+  </p>
+
+  <h2>The phone line and the conversation</h2>
+  <p>A <strong>connection</strong> is a live network session to Postgres — one authenticated
+  socket, open for as long as the object exists, that also tracks your current transaction. A
+  <strong>cursor</strong> is bound to one connection and is what actually sends SQL and reads
+  results back. Think of the connection as the phone line, and the cursor as the person talking
+  on it — you can have more than one conversation (cursor) on the same line (connection), and
+  they all share whatever's been said so far (the transaction).</p>
+  <div class="flow">
+    <div class="flow-box"><div class="flow-title">Your script</div><div class="flow-sub">psycopg2.connect(...)</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box hl"><div class="flow-title">Connection</div><div class="flow-sub">one session, one transaction</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box hl"><div class="flow-title">Cursor</div><div class="flow-sub">sends SQL, holds results</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box"><div class="flow-title">Postgres</div><div class="flow-sub">the actual database</div></div>
+  </div>
+
+  <h2>Try it: the lifecycle, traced</h2>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="connect" onclick="applyTab('connect')">connect()</button>
+    <button class="tab-btn" data-tab="cursor" onclick="applyTab('cursor')">cursor()</button>
+    <button class="tab-btn" data-tab="fetch" onclick="applyTab('fetch')">execute + fetch</button>
+    <button class="tab-btn" data-tab="commit" onclick="applyTab('commit')">commit / rollback</button>
+  </div>
+
+  <div class="widget">
+
+    <div class="tab-detail active" data-tab="connect">
+      <p class="tab-def">Opens the socket and authenticates. One <code>Connection</code> object = one Postgres session, with its own transaction state.</p>
+      <div class="code-wrap"><pre><span class="kw">import</span> psycopg2
+
+conn <span class="op">=</span> psycopg2.connect(
+    host<span class="op">=</span><span class="st">"localhost"</span>, port<span class="op">=</span><span class="nm">5432</span>,
+    dbname<span class="op">=</span><span class="st">"ride_prod"</span>, user<span class="op">=</span><span class="st">"postgres"</span>, password<span class="op">=</span><span class="st">"..."</span>,
+)</pre></div>
+    </div>
+
+    <div class="tab-detail" data-tab="cursor">
+      <p class="tab-def">A cursor is bound to one connection. You can open several — they all share that connection's transaction, so one cursor can see another's uncommitted work.</p>
+      <div class="code-wrap"><pre>cur1 <span class="op">=</span> conn.cursor()
+cur2 <span class="op">=</span> conn.cursor()
+
+cur1.execute(<span class="st">"INSERT INTO trips (driver_id, fare) VALUES (5, 200)"</span>)
+cur2.execute(<span class="st">"SELECT count(*) FROM trips"</span>)  <span class="cm"># sees cur1's uncommitted insert too</span>
+
+conn.commit()  <span class="cm"># commits BOTH cursors' work -- it's conn's transaction</span></pre></div>
+    </div>
+
+    <div class="tab-detail" data-tab="fetch">
+      <p class="tab-def"><code>execute()</code> sends the query; results sit inside the cursor until you pull them out. The cursor remembers its position — fetch the same results twice and the second call comes back empty.</p>
+      <div class="code-wrap"><pre>cur.execute(<span class="st">"SELECT trip_id, fare FROM trips ORDER BY trip_id"</span>)
+first  <span class="op">=</span> cur.fetchall()
+second <span class="op">=</span> cur.fetchall()</pre></div>
+    </div>
+
+    <div class="tab-detail" data-tab="commit">
+      <p class="tab-def">Nothing written through a cursor is visible to any other connection until <code>conn.commit()</code>. <code>autocommit</code> is <code>False</code> by default — every statement waits.</p>
+      <div class="code-wrap"><pre><span class="kw">try</span>:
+    cur.execute(<span class="st">"INSERT INTO trips (driver_id, fare) VALUES (9, 500)"</span>)
+    conn.commit()
+<span class="kw">except</span> Exception:
+    conn.rollback()
+    <span class="kw">raise</span></pre></div>
+    </div>
+
+    <div class="legend" id="legend-wrap">
+      <span class="legend-item"><span class="legend-dot" style="background:var(--teal)"></span>as expected</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--amber)"></span>worth noticing</span>
+    </div>
+
+    <div class="result-label">Trace</div>
+    <table class="result">
+      <thead id="result-head"></thead>
+      <tbody id="result-body"></tbody>
+    </table>
+
+  </div>
+
+  <h2>with conn: doesn't do what it looks like it does</h2>
+  <p><code>with conn:</code> manages the <strong>transaction</strong> — it commits on a clean
+  exit, or rolls back if an exception propagates out of the block. It does <strong>not</strong>
+  close the connection. That's still your job.</p>
+  <div class="code-wrap"><pre><span class="kw">with</span> conn:
+    <span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+        cur.execute(<span class="st">"INSERT INTO trips (driver_id, fare) VALUES (77, 222)"</span>)
+<span class="cm"># transaction is committed here</span>
+
+<span class="fn">print</span>(conn.closed)   <span class="cm"># 0 -- still open!</span>
+<span class="fn">print</span>(cur.closed)    <span class="cm"># True -- the cursor's own "with" DID close it</span>
+
+conn.close()          <span class="cm"># you still have to do this yourself</span></pre></div>
+  <div class="callout warn">
+    <span class="ic">⚠️</span>
+    <div><code>with conn:</code> and <code>with cur:</code> clean up two different things. This is exactly why <code>db_report_starter.py</code> wraps everything in <code>try / finally: conn.close()</code> instead of relying on <code>with conn:</code> alone.</div>
+  </div>
+
+  <h2>Never build SQL with string formatting</h2>
+  <p>The second argument to <code>execute()</code> exists so a value is sent to Postgres
+  <em>separately</em> from the SQL text — Postgres always treats it as data, never as part of the
+  command, no matter what characters it contains. Skip that, and a value the user controls can
+  rewrite your query.</p>
+  <div class="code-wrap">
+    <div class="code-tag bad">unsafe — f-string</div>
+    <pre>driver_id_input <span class="op">=</span> <span class="st">"1 OR 1=1"</span>  <span class="cm"># attacker-controlled input</span>
+
+sql <span class="op">=</span> <span class="st">f"SELECT * FROM trips WHERE driver_id = {driver_id_input}"</span>
+cur.execute(sql)
+<span class="cm"># actual SQL sent: ...WHERE driver_id = 1 OR 1=1</span>
+<span class="cm"># returns EVERY row in the table, not one driver's trips</span></pre>
+  </div>
+  <div class="code-wrap">
+    <div class="code-tag good">safe — parameterized</div>
+    <pre>cur.execute(
+    <span class="st">"SELECT * FROM trips WHERE driver_id = %s"</span>,
+    (driver_id_input,),
+)
+<span class="cm"># psycopg2.errors.InvalidTextRepresentation:</span>
+<span class="cm"># invalid input syntax for type integer: "1 OR 1=1"</span>
+<span class="cm"># fails safely instead of running -- exactly what you want</span></pre>
+  </div>
+  <p>Both examples above are real, verified psycopg2 output — the unsafe version really does
+  return every row, and the safe version really does reject the malicious input with a clean
+  error instead of executing it.</p>
+
+  <h2>Reference</h2>
+  <table class="plain">
+    <thead><tr><th>Call</th><th>Does</th></tr></thead>
+    <tbody>
+      <tr><td><code>psycopg2.connect(**config)</code></td><td>Open a new connection — one Postgres session</td></tr>
+      <tr><td><code>conn.cursor()</code></td><td>Create a cursor bound to this connection</td></tr>
+      <tr><td><code>cur.execute(sql, params)</code></td><td>Send a query, with values passed separately — never string-formatted in</td></tr>
+      <tr><td><code>cur.fetchone()</code> / <code>fetchmany(n)</code> / <code>fetchall()</code></td><td>Pull 1 / <code>n</code> / all remaining result rows</td></tr>
+      <tr><td><code>conn.commit()</code> / <code>conn.rollback()</code></td><td>Make this connection's pending changes permanent, or discard them</td></tr>
+      <tr><td><code>conn.close()</code></td><td>End the session — always, even on error (use <code>try/finally</code>)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Common mistakes</h2>
+  <table class="plain">
+    <thead><tr><th>Mistake</th><th>What goes wrong</th><th>Fix</th></tr></thead>
+    <tbody>
+      <tr><td>Building SQL with an f-string / <code>%</code> / <code>.format()</code></td><td>SQL injection, and it breaks on any value containing a quote</td><td>Always pass values as the second argument: <code>cur.execute(sql, (value,))</code></td></tr>
+      <tr><td>Assuming <code>with conn:</code> closes the connection</td><td>It only commits/rolls back — the socket stays open, leaking connections over time</td><td>Still call <code>conn.close()</code>, typically in a <code>finally</code> block</td></tr>
+      <tr><td>Calling <code>fetchall()</code> twice, expecting the same rows</td><td>The cursor already consumed them — the second call returns <code>[]</code></td><td>Store the result in a variable the first time</td></tr>
+      <tr><td>Forgetting <code>conn.commit()</code> after an INSERT/UPDATE</td><td>The write appears to succeed with no error, but is invisible to everyone else and vanishes when the connection closes</td><td><code>autocommit</code> is <code>False</code> by default — commit explicitly, or set <code>conn.autocommit = True</code> if that's really what you want</td></tr>
+      <tr><td>Opening a new connection per query, inside a loop</td><td>Each connection is a real network handshake — doing it per-row is slow and can exhaust the database's connection limit</td><td>Open one connection, reuse its cursor(s) for the whole batch</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="ic">🎯</span>
+    <div><strong>You're ready</strong> when you can explain, in one sentence each, what a connection is for, what a cursor is for, and why <code>with conn:</code> alone isn't enough to clean up after yourself.</div>
+  </div>
+
+</div>
+
+<script>
+  const TABS = {
+    connect: {
+      cols: ['attribute'],
+      extraCols: [{ key: 'value', label: 'value right after connect()' }],
+      rows: [
+        { attribute: 'conn.closed', state: 'included', extra: { value: '0  (open)' } },
+        { attribute: 'conn.autocommit', state: 'flag', extra: { value: "False  (nothing saved until you say so)" } }
+      ]
+    },
+    cursor: {
+      cols: ['object'],
+      extraCols: [{ key: 'scope', label: 'scope' }],
+      rows: [
+        { object: 'conn', state: 'included', extra: { scope: 'one Postgres session / one transaction' } },
+        { object: 'cur1', state: 'included', extra: { scope: "talks on conn's line" } },
+        { object: 'cur2', state: 'flag', extra: { scope: "same line as cur1 -- shares conn's transaction" } }
+      ]
+    },
+    fetch: {
+      cols: ['call'],
+      extraCols: [{ key: 'result', label: 'returns' }],
+      rows: [
+        { call: 'cur.execute(...)', state: 'included', extra: { result: '(sends the query; nothing returned yet)' } },
+        { call: 'first = cur.fetchall()', state: 'included', extra: { result: '[(1, 450), (2, 320), (3, 610)]' } },
+        { call: 'second = cur.fetchall()', state: 'flag', extra: { result: '[]  -- already consumed' } }
+      ]
+    },
+    commit: {
+      cols: ['step'],
+      extraCols: [{ key: 'visible', label: 'visible to another connection?' }],
+      rows: [
+        { step: 'after cur.execute(INSERT ...)', state: 'flag', extra: { visible: 'no' } },
+        { step: 'after conn.commit()', state: 'included', extra: { visible: 'yes' } },
+        { step: 'if exception -> conn.rollback()', state: 'included', extra: { visible: 'insert discarded entirely' } }
+      ]
+    }
+  };
+
+  const LABELS = { attribute: 'attribute', object: 'object', call: 'call', step: 'step' };
+
+  function applyTab(key) {
+    const cfg = TABS[key];
+
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === key));
+    document.querySelectorAll('.tab-detail').forEach(el => el.classList.toggle('active', el.dataset.tab === key));
+
+    const thead = document.getElementById('result-head');
+    const headCells = cfg.cols.map(c => '<th>' + LABELS[c] + '</th>').join('')
+      + cfg.extraCols.map(c => '<th class="computed">' + c.label + '</th>').join('');
+    thead.innerHTML = '<tr>' + headCells + '</tr>';
+
+    const tbody = document.getElementById('result-body');
+    tbody.innerHTML = '';
+    cfg.rows.forEach((row, i) => {
+      const tr = document.createElement('tr');
+      tr.className = 'result-row ' + row.state;
+
+      const baseCells = cfg.cols.map(c => '<td>' + escHtml(row[c]) + '</td>').join('');
+      const extraCells = cfg.extraCols.map(c => '<td class="computed">' + escHtml(row.extra[c.key]) + '</td>').join('');
+
+      tr.innerHTML = baseCells + extraCells;
+      tbody.appendChild(tr);
+      setTimeout(() => tr.classList.add('show'), i * 90);
+    });
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  applyTab('connect');
+</script>
+</body>
+</html>

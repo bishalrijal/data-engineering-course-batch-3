@@ -7,6 +7,11 @@ detail split into their own tables, plus two views (`v_trips`, `v_promo_usage`) 
 computed columns (`fare_amount`, `duration_minutes`, `times_used`) a fully normalized schema
 doesn't store directly.
 
+New to virtual environments, or to `psycopg2`'s connection/cursor model? Read these first:
+
+- [Virtual Environments — Pre-read](week3_venv_preread.html)
+- [DB Connections with psycopg2 — Pre-read](week3_psycopg2_preread.html)
+
 ## Prerequisites
 
 - PostgreSQL running locally, with a role that can `CREATE DATABASE` (the default `postgres`
