@@ -7,6 +7,9 @@ detail split into their own tables, plus two views (`v_trips`, `v_promo_usage`) 
 computed columns (`fare_amount`, `duration_minutes`, `times_used`) a fully normalized schema
 doesn't store directly.
 
+Looking for the assignment? See **[assignment/](assignment/)** — extract movie data from the
+OMDb API and design your own fact/dimension warehouse from it.
+
 New to virtual environments, or to `psycopg2`'s connection/cursor model? Read these first:
 
 - [Virtual Environments — Pre-read](week3_venv_preread.html)
