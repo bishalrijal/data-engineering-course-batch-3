@@ -1,0 +1,20 @@
+select
+    trip_id,
+    driver_id,
+    passenger_id,
+    pickup_location_id,
+    dropoff_location_id,
+    payment_method_id,
+    promo_code_id,
+    base_fare,
+    tip_amount,
+    discount_amount,
+    surge_multiplier,
+    distance_km,
+    status,
+    requested_at,
+    completed_at,
+    driver_rating,
+    passenger_rating,
+    to_char(requested_at, 'YYYYMMDD')::integer as date_key
+from {{ source('raw', 'trips') }}

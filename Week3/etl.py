@@ -275,7 +275,7 @@ def extract_trips(conn):
         tc.cancelled_by          -- from trip_cancellations (NULL for non-cancelled)
     FROM  trips t
     LEFT JOIN trip_cancellations tc ON t.trip_id = tc.trip_id
-    WHERE t.requested_at > %(watermark)s
+   -- WHERE t.requested_at > %()s
     ORDER BY t.requested_at
         """
     return extract(conn,extract_trip_sql)

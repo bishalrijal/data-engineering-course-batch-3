@@ -1,5 +1,7 @@
-CREATE DATABASE ride_dw;
+-- Active: 1752501731428@@localhost@5432@ride_dw
+-- CREATE DATABASE ride_dw;
 
+DROP TABLE IF EXISTS dim_date CASCADE;
 CREATE TABLE dim_date (
     date_key        INTEGER      PRIMARY KEY,      -- e.g. 20240315
     full_date       DATE         NOT NULL UNIQUE,
@@ -19,6 +21,7 @@ CREATE TABLE dim_date (
 -- time_key format: HHMM integer rounded down to nearest 15 min.
 -- Example: a trip requested at 14:37 gets time_key = 1430.
 -- ─────────────────────────────────────────────────────────────────────────────
+DROP TABLE IF EXISTS dim_time CASCADE;
 CREATE TABLE dim_time (
     time_key        INTEGER      PRIMARY KEY,   -- HHMM, e.g. 1430 = 2:30 PM
     hour            SMALLINT     NOT NULL CHECK (hour BETWEEN 0 AND 23),
@@ -28,25 +31,27 @@ CREATE TABLE dim_time (
     is_rush_hour    BOOLEAN      NOT NULL       -- TRUE for 7-9am and 5-8pm weekday proxy
 );
 
+DROP TABLE IF EXISTS dim_driver CASCADE;
 CREATE TABLE dim_driver (
     driver_key      SERIAL       PRIMARY KEY,
-    driver_id       INTEGER      NOT NULL,          -- natural key from OLTP
+    driver_id       INTEGER      NOT NULL UNIQUE,          -- natural key from OLTP
     name            VARCHAR(100) NOT NULL,
     status          VARCHAR(20)  NOT NULL,          -- active / inactive / suspended
     joined_at       TIMESTAMP,
     tenure_bucket   VARCHAR(20)                 -- '0-6 months' / '6-12 months' / '1-2 years' / '2+ years'
 );
 
+DROP TABLE IF EXISTS dim_passenger CASCADE;
 CREATE TABLE dim_passenger (
     passenger_key   SERIAL       PRIMARY KEY,
-    passenger_id    INTEGER      NOT NULL,
+    passenger_id    INTEGER      NOT NULL UNIQUE,
     name            VARCHAR(100) NOT NULL,
     status          VARCHAR(20)  NOT NULL,
     cohort_month    VARCHAR(7),                    -- 'YYYY-MM' — when they first joined
     created_at      TIMESTAMP
 );
 
-
+DROP TABLE IF EXISTS dim_location CASCADE;
 CREATE TABLE dim_location (
     location_key    SERIAL       PRIMARY KEY,
     location_id     INTEGER      NOT NULL UNIQUE,  -- natural key from OLTP
@@ -59,6 +64,7 @@ CREATE TABLE dim_location (
 );
 
 
+DROP TABLE IF EXISTS dim_payment_method CASCADE;
 CREATE TABLE dim_payment_method (
     payment_method_key  SERIAL      PRIMARY KEY,
     payment_method_id   INTEGER     UNIQUE,     -- NULL for the "Unknown" row
@@ -67,6 +73,7 @@ CREATE TABLE dim_payment_method (
     is_active           BOOLEAN
 );
 
+DROP TABLE IF EXISTS dim_promo_code CASCADE;
 CREATE TABLE dim_promo_code (
     promo_code_key  SERIAL       PRIMARY KEY,
     promo_code_id   INTEGER      UNIQUE,    -- NULL = "No Promo" sentinel row
@@ -77,11 +84,10 @@ CREATE TABLE dim_promo_code (
 );
 
 
+DROP TABLE IF EXISTS fact_trips CASCADE;
 CREATE TABLE fact_trips (
     trip_key                SERIAL          PRIMARY KEY,
     source_trip_id          INTEGER         NOT NULL UNIQUE,   -- OLTP trips.trip_id — for lineage + ON CONFLICT
- 
-    -- ── Dimension keys ──────────────────────────────────────────────────────
     date_key                INTEGER         NOT NULL REFERENCES dim_date(date_key),
     driver_key              INTEGER         NOT NULL REFERENCES dim_driver(driver_key),
     passenger_key           INTEGER         NOT NULL REFERENCES dim_passenger(passenger_key),
@@ -89,8 +95,6 @@ CREATE TABLE fact_trips (
     dropoff_location_key    INTEGER         NOT NULL REFERENCES dim_location(location_key),
     payment_method_key      INTEGER         REFERENCES dim_payment_method(payment_method_key),
     promo_code_key          INTEGER         REFERENCES dim_promo_code(promo_code_key),
- 
-    -- ── Additive measures ───────────────────────────────────────────────────
     base_fare               NUMERIC(10,2),
     tip_amount              NUMERIC(8,2)    NOT NULL DEFAULT 0.00,
     discount_amount         NUMERIC(8,2)    NOT NULL DEFAULT 0.00,
@@ -98,15 +102,10 @@ CREATE TABLE fact_trips (
     distance_km             NUMERIC(6,2),
     duration_minutes        NUMERIC(6,1),   -- NULL for cancelled / no_show
     trip_count              SMALLINT        NOT NULL DEFAULT 1,   -- always 1; useful for COUNT queries
- 
-    -- ── Semi-additive measures ───────────────────────────────────────────────
     driver_rating           NUMERIC(2,1),   -- passenger → driver (AVG only)
     passenger_rating        NUMERIC(2,1),   -- driver → passenger (AVG only)
- 
-    -- ── Non-additive measure ─────────────────────────────────────────────────
+
     surge_multiplier        NUMERIC(4,2),   -- ratio; never SUM, only AVG
- 
-    -- ── Audit timestamp ──────────────────────────────────────────────────────
     requested_at            TIMESTAMP       NOT NULL   -- kept for incremental watermark queries
 );
 
@@ -162,3 +161,7 @@ FROM
     generate_series(0, 23) AS h,
     generate_series(0, 45, 15) AS m
 ORDER BY h, m;
+
+SELECT * from public.dim_driver;
+
+select * FROM public.dim_location;

@@ -20,3 +20,8 @@ A hands-on data engineering course covering the core tools and concepts used in 
 - [Virtual Environments — Pre-read](Week3/week3_venv_preread.html)
 - [DB Connections with psycopg2 — Pre-read](Week3/week3_psycopg2_preread.html)
 - [Sample data setup](Week3/README.md)
+
+## Python for Data Engineers
+
+A parallel, session-based track covering the Python side of the job — everything that happens
+before data reaches a database. See [python-for-data-engineer/README.md](python-for-data-engineer/README.md).

@@ -1,0 +1,135 @@
+version: 2
+
+models:
+  - name: stg_drivers
+    columns:
+      - name: driver_id
+        data_tests: [unique, not_null]
+      - name: name
+        data_tests: [not_null]
+      - name: status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['active', 'inactive', 'suspended']
+      - name: joined_at
+        data_tests: [not_null]
+
+  - name: stg_passengers
+    columns:
+      - name: passenger_id
+        data_tests: [unique, not_null]
+      - name: name
+        data_tests: [not_null]
+      - name: status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['active', 'inactive', 'banned']
+      - name: created_at
+        data_tests: [not_null]
+
+  - name: stg_locations
+    columns:
+      - name: location_id
+        data_tests: [unique, not_null]
+      - name: city_name
+        data_tests: [not_null]
+
+  - name: stg_payment_methods
+    columns:
+      - name: payment_method_id
+        data_tests: [unique, not_null]
+      - name: name
+        data_tests: [not_null]
+      - name: type
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['card', 'cash', 'wallet', 'voucher']
+      - name: is_active
+        data_tests: [not_null]
+
+  - name: stg_promo_codes
+    columns:
+      - name: promo_code_id
+        data_tests: [unique, not_null]
+      - name: code
+        data_tests: [not_null]
+      - name: discount_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['percent', 'flat']
+      - name: discount_value
+        data_tests: [not_null]
+      - name: is_active
+        data_tests: [not_null]
+
+  - name: stg_trips
+    columns:
+      - name: trip_id
+        data_tests: [unique, not_null]
+      - name: status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['completed', 'cancelled', 'no_show']
+      - name: base_fare
+        data_tests: [not_null]
+      - name: tip_amount
+        data_tests: [not_null]
+      - name: discount_amount
+        data_tests: [not_null]
+      - name: surge_multiplier
+        data_tests: [not_null]
+      - name: distance_km
+        data_tests: [not_null]
+      - name: requested_at
+        data_tests: [not_null]
+      - name: driver_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_drivers')
+                field: driver_id
+      - name: passenger_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_passengers')
+                field: passenger_id
+      - name: pickup_location_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_locations')
+                field: location_id
+      - name: dropoff_location_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_locations')
+                field: location_id
+      - name: payment_method_id
+        data_tests:
+          # nullable in source (e.g. no_show trips) — relationships test
+          # only checks rows where the value is non-null
+          - relationships:
+              arguments:
+                to: ref('stg_payment_methods')
+                field: payment_method_id
+      - name: promo_code_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_promo_codes')
+                field: promo_code_id
