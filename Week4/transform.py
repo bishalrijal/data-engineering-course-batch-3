@@ -88,6 +88,7 @@ def transform(oltp_row, lookups):
             "passenger_rating":     row["passenger_rating"],
             "surge_multiplier":     surge_multiplier,
             "requested_at":         row["requested_at"],
+            "status":               row["status"]
         })
 
     logger.info(f"Transformed {len(fact_rows)} rows, skipped {skipped}")

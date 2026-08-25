@@ -5,13 +5,16 @@ from config import SOURCE_DB_CONFIG,DEST_DB_CONFIG
 
 import time
 
+import argparse
+
 from extract import (extract_driver,
                      extract_passenger,
                      extract_lookup_dim,
                      extract_promo_code,
                      extract_payment_method,
                      extract_location,
-                     extract_trips,
+                     extract_trips_incremental,
+                     extract_trips_full,
                      get_watermark
                      )
 from transform import transform
@@ -32,11 +35,21 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Rides ELT pipline loaad config")
+    parser.add_argument(
+        "--full-reload",
+        action="store_true",
+        help="Truncate warehouse and reload all data"
+    )
+    return parser.parse_args()
+
 def main():
     """
     Extract all dimension data from the source DB and load them into the target DB.
     """
-    is_full_load = True
+    args =parse_args()
+    mode = 'FULL' if args.full_reload else 'INCREMENTAL'
     src_conn = psycopg2.connect(**SOURCE_DB_CONFIG)
     dst_conn = psycopg2.connect(**DEST_DB_CONFIG)
     try:
@@ -64,9 +77,15 @@ def main():
         logger.info(f"lookup ectraction completd on {time.time() - time0:.3f}s")
 
         watermark = get_watermark(dst_conn)
-        rows = extract_trips(src_conn,{"watermark":watermark})
+        if mode == 'INCREMENTAL':
+            rows = extract_trips_incremental(src_conn,{"watermark":watermark})
+        else:
+            with dst_conn.cursor() as curr:
+                curr.execute('truncate table fact_trips')
+            rows = extract_trips_full(src_conn)
+
         fact_rows = transform(rows, lookups)
-        run_quality_check(rows)
+        run_quality_check(fact_rows)
         load_fact_trips(dst_conn, fact_rows)
 
     finally:

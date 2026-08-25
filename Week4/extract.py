@@ -112,7 +112,7 @@ def extract_promo_code(conn):
 
 
 
-def extract_trips(conn,watermark):
+def extract_trips_incremental(conn,watermark):
     extract_trip_sql = """
       SELECT
         t.trip_id,
@@ -139,6 +139,35 @@ def extract_trips(conn,watermark):
     ORDER BY t.requested_at
         """
     return extract(conn,extract_trip_sql,watermark)
+
+
+def extract_trips_full(conn):
+    extract_trip_sql = """
+      SELECT
+        t.trip_id,
+        t.driver_id,
+        t.passenger_id,
+        t.pickup_location_id,
+        t.dropoff_location_id,
+        t.payment_method_id,
+        t.promo_code_id,
+        t.base_fare,
+        t.tip_amount,
+        t.discount_amount,
+        t.surge_multiplier,
+        t.distance_km,
+        t.status,
+        t.requested_at,
+        t.completed_at,
+        t.driver_rating,
+        t.passenger_rating,
+        tc.cancelled_by          -- from trip_cancellations (NULL for non-cancelled)
+    FROM  trips t
+    LEFT JOIN trip_cancellations tc ON t.trip_id = tc.trip_id
+    ORDER BY t.requested_at
+        """
+    return extract(conn,extract_trip_sql)
+
 
 
 def extract_lookup_dim(conn):

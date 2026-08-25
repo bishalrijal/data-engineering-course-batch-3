@@ -6,7 +6,7 @@ class DataQualityError(Exception):
     pass
 
 def check_negative_fares(rows):
-    bad_data = [ row for row in rows if["fare_amount"] < 0 ]
+    bad_data = [ row for row in rows if row["fare_amount"] < 0 ]
     return {
         "check": "no_negative_fare",
         "passed": len(bad_data) == 0,
@@ -67,7 +67,7 @@ def run_quality_check(rows):
     ]
     failed = [c for c in checks if not c["passed"]]
 
-    if failed:
+    if failed and len(failed) > 0:
         first = failed[0]
         # To do log every failed data 
         """
@@ -78,6 +78,6 @@ def run_quality_check(rows):
 
         """
         raise DataQualityError(
-            f"Quality check failed: {first['check'] - first['details']}"
+            f"Quality check failed: {first['check']} - {first['details']}"
         )
     return True
