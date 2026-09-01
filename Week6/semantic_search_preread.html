@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 6 Pre-read — Semantic Search Concepts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:      #0F1B2D;
+    --navy2:     #162236;
+    --navy3:     #1D2E47;
+    --teal:      #00C9A7;
+    --teal-dim:  #00956B;
+    --teal-bg:   rgba(0,201,167,0.08);
+    --teal-bd:   rgba(0,201,167,0.25);
+    --white:     #F0F4F8;
+    --white2:    #D8E2EE;
+    --slate:     #8899AA;
+    --slate2:    #607080;
+    --code-bg:   #111D2E;
+    --code-bd:   #243347;
+    --red:       #FF6B6B;
+    --red-bg:    rgba(255,107,107,0.08);
+    --red-bd:    rgba(255,107,107,0.25);
+    --amber:     #FFB347;
+    --amber-bg:  rgba(255,179,71,0.08);
+    --amber-bd:  rgba(255,179,71,0.25);
+    --green:     #4CAF82;
+    --green-bg:  rgba(76,175,130,0.08);
+    --green-bd:  rgba(76,175,130,0.25);
+    --sidebar-w: 240px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  code, pre, .mono, kbd {
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "calt" 0;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    min-height: 100vh;
+    display: flex;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    min-height: 100vh;
+    background: var(--navy2);
+    border-right: 1px solid var(--code-bd);
+    position: fixed;
+    top: 0; left: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .sidebar-header {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--code-bd);
+  }
+
+  .sidebar-eyebrow {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: var(--teal);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .sidebar-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--white);
+    line-height: 1.4;
+  }
+
+  .sidebar-sub {
+    font-size: 11px;
+    color: var(--slate);
+    margin-top: 4px;
+  }
+
+  .sidebar-nav { padding: 12px 0; flex: 1; }
+
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--slate2);
+    text-transform: uppercase;
+    padding: 10px 20px 4px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 20px;
+    font-size: 13px;
+    color: var(--slate);
+    cursor: pointer;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+    text-decoration: none;
+  }
+
+  .nav-item:hover { color: var(--white); background: var(--navy3); }
+
+  .nav-item.active {
+    color: var(--teal);
+    border-left-color: var(--teal);
+    background: var(--teal-bg);
+    font-weight: 500;
+  }
+
+  .nav-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--slate2);
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .nav-item.active .nav-dot,
+  .nav-item.done .nav-dot { background: var(--teal); }
+  .nav-item.done { color: var(--slate); }
+
+  .progress-bar-wrap {
+    padding: 16px 20px;
+    border-top: 1px solid var(--code-bd);
+  }
+  .progress-label {
+    font-size: 11px;
+    color: var(--slate);
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .progress-track {
+    height: 3px;
+    background: var(--navy3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--teal);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* ── Main content ── */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    max-width: 800px;
+    padding: 48px 56px;
+  }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ── Section header ── */
+  .section-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--teal);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  h1.section-heading {
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--white);
+    line-height: 1.2;
+    margin-bottom: 14px;
+    letter-spacing: -0.02em;
+  }
+
+  .section-intro {
+    font-size: 16px;
+    color: var(--white2);
+    line-height: 1.75;
+    margin-bottom: 32px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--code-bd);
+  }
+
+  /* ── Prose ── */
+  h2.subsection {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--white);
+    margin: 32px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  h2.subsection::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 18px;
+    background: var(--teal);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  p { color: var(--white2); margin-bottom: 14px; }
+
+  strong { color: var(--white); font-weight: 500; }
+
+  /* ── Callout boxes ── */
+  .callout {
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 20px 0;
+    font-size: 14px;
+    line-height: 1.6;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .callout.tip  { background: var(--teal-bg); border: 1px solid var(--teal-bd); color: var(--white2); }
+  .callout.warn { background: var(--amber-bg); border: 1px solid var(--amber-bd); color: var(--white2); }
+  .callout.goal { background: var(--green-bg); border: 1px solid var(--green-bd); color: var(--white2); }
+  .callout.error{ background: var(--red-bg);   border: 1px solid var(--red-bd);   color: var(--white2); }
+  .callout strong { color: var(--white); }
+
+  /* ── Code block ── */
+  .code-wrap {
+    background: var(--code-bg);
+    border: 1px solid var(--code-bd);
+    border-radius: 10px;
+    margin: 18px 0;
+    overflow: hidden;
+  }
+
+  .code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--code-bd);
+    background: var(--navy2);
+  }
+
+  .code-lang {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--teal);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+
+  .code-label {
+    font-size: 11px;
+    color: var(--slate);
+  }
+
+  pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--white);
+    padding: 18px 20px;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  /* syntax highlight helpers */
+  .kw  { color: #FF79C6; }   /* keywords */
+  .fn  { color: #50FA7B; }   /* functions */
+  .st  { color: #F1FA8C; }   /* strings */
+  .cm  { color: #6272A4; }   /* comments */
+  .nm  { color: #BD93F9; }   /* numbers/names */
+  .op  { color: #FF79C6; }   /* operators */
+  .bi  { color: #8BE9FD; }   /* builtins / types */
+
+  /* ── Before/After toggle ── */
+  .compare-wrap { margin: 24px 0; }
+
+  .compare-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--code-bd);
+    margin-bottom: 0;
+  }
+
+  .compare-tab {
+    padding: 9px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    color: var(--slate);
+    transition: all 0.15s;
+    margin-bottom: -1px;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+
+  .compare-tab:hover { color: var(--white2); }
+  .compare-tab.active-before { color: var(--red); border-bottom-color: var(--red); }
+  .compare-tab.active-after  { color: var(--teal); border-bottom-color: var(--teal); }
+
+  .compare-panel { display: none; }
+  .compare-panel.visible { display: block; }
+
+  /* ── Key term pill ── */
+  .term {
+    display: inline-block;
+    background: var(--teal-bg);
+    border: 1px solid var(--teal-bd);
+    color: var(--teal);
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 1px 8px;
+    border-radius: 4px;
+    margin: 0 1px;
+  }
+
+  /* ── Nav buttons ── */
+  .nav-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 52px;
+    padding-top: 28px;
+    border-top: 1px solid var(--code-bd);
+  }
+
+  .nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid var(--code-bd);
+    background: var(--navy2);
+    color: var(--white2);
+    text-decoration: none;
+  }
+
+  .nav-btn:hover { border-color: var(--teal); color: var(--teal); }
+  .nav-btn:disabled { opacity: 0.3; pointer-events: none; }
+  .nav-btn.primary { background: var(--teal-bg); border-color: var(--teal); color: var(--teal); }
+
+  /* ── Check list ── */
+  .check-list { list-style: none; margin: 12px 0 20px; }
+  .check-list li {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 6px 0;
+    font-size: 14px;
+    color: var(--white2);
+    border-bottom: 1px solid var(--code-bd);
+  }
+  .check-list li:last-child { border-bottom: none; }
+  .check-list li::before {
+    content: '→';
+    color: var(--teal);
+    flex-shrink: 0;
+    font-weight: 600;
+    margin-top: 1px;
+  }
+
+  /* ── Concept card grid ── */
+  .concept-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 20px 0;
+  }
+
+  .concept-card {
+    background: var(--navy2);
+    border: 1px solid var(--code-bd);
+    border-radius: 10px;
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .concept-card:hover {
+    border-color: var(--teal);
+    background: var(--navy3);
+  }
+
+  .concept-card-num {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--teal);
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+
+  .concept-card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 4px;
+  }
+
+  .concept-card-sub {
+    font-size: 12px;
+    color: var(--slate);
+    line-height: 1.5;
+  }
+
+  /* ── Table ── */
+  table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 13.5px; }
+  thead tr { border-bottom: 1px solid var(--teal-bd); }
+  th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; color: var(--teal); letter-spacing: 0.08em; text-transform: uppercase; }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--code-bd); color: var(--white2); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td code, th code { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--teal); }
+
+  /* ── inline code ── */
+  code { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--teal); background: var(--teal-bg); padding: 1px 6px; border-radius: 4px; }
+
+  /* ── The final script banner ── */
+  .script-banner {
+    background: linear-gradient(135deg, var(--navy3) 0%, #0D2535 100%);
+    border: 1px solid var(--teal-bd);
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin: 28px 0;
+  }
+  .script-banner-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+  .script-banner-sub {
+    font-size: 14px;
+    color: var(--slate);
+    margin-bottom: 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-eyebrow">Week 6 · Pre-read</div>
+    <div class="sidebar-title">Semantic Search Before the Pipeline</div>
+    <div class="sidebar-sub">6 concepts · ~50 min</div>
+  </div>
+
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Start here</div>
+    <a class="nav-item active" onclick="goTo(0)" href="#">
+      <span class="nav-dot"></span>Overview
+    </a>
+
+    <div class="nav-section-label">Concepts</div>
+    <a class="nav-item" onclick="goTo(1)" href="#">
+      <span class="nav-dot"></span>1 · Regular expressions
+    </a>
+    <a class="nav-item" onclick="goTo(2)" href="#">
+      <span class="nav-dot"></span>2 · Rich text &amp; HTML
+    </a>
+    <a class="nav-item" onclick="goTo(3)" href="#">
+      <span class="nav-dot"></span>3 · Embeddings &amp; similarity
+    </a>
+    <a class="nav-item" onclick="goTo(4)" href="#">
+      <span class="nav-dot"></span>4 · SQL keys &amp; upserts
+    </a>
+    <a class="nav-item" onclick="goTo(5)" href="#">
+      <span class="nav-dot"></span>5 · Vector databases
+    </a>
+    <a class="nav-item" onclick="goTo(6)" href="#">
+      <span class="nav-dot"></span>6 · Docker &amp; docker-compose
+    </a>
+    <a class="nav-item" onclick="goTo(7)" href="#">
+      <span class="nav-dot"></span>7 · Putting it together
+    </a>
+  </div>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-label">
+      <span>Progress</span>
+      <span id="progress-text">0 / 8</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Main ── -->
+<main class="main">
+
+  <!-- ── 0: Overview ── -->
+  <section class="section active" id="sec-0">
+    <div class="section-eyebrow">Before you start</div>
+    <h1 class="section-heading">Six concepts.<br>One semantic search pipeline.</h1>
+    <p class="section-intro">
+      In Week 6 you will build a pipeline that ingests messy, real-world support tickets —
+      rich-text bodies full of HTML, signatures, and quoted reply chains — cleans them,
+      turns them into vectors, and makes them <strong>searchable by meaning</strong> instead
+      of exact keyword match. The data lives in a real database, not flat files. This
+      pre-read covers the six ideas that pipeline depends on. Work through each one before
+      class so the concepts are familiar before you see them wired together in code.
+    </p>
+
+    <div class="callout goal">
+      <span class="callout-icon">🎯</span>
+      <div><strong>By the end of this pre-read</strong> you will be able to read every stage of the <code>support_ticket_pipeline</code> project — ingestion, validation, cleaning, embedding, vector storage, and query — and explain what each one is doing and why.</div>
+    </div>
+
+    <h2 class="subsection">The project you are building toward</h2>
+    <p>Every concept in this pre-read appears somewhere in this pipeline. You will build it stage by stage.</p>
+
+    <div class="script-banner">
+      <div class="script-banner-title">support_ticket_pipeline</div>
+      <div class="script-banner-sub">Ingests HTML ticket bodies → redacts PII &amp; validates → strips HTML &amp; cleans text → embeds text as vectors → stores everything in Postgres + pgvector → answers "find me tickets like this one" queries</div>
+    </div>
+
+    <h2 class="subsection">What's covered</h2>
+    <div class="concept-grid">
+      <div class="concept-card" onclick="goTo(1)">
+        <div class="concept-card-num">01</div>
+        <div class="concept-card-title">Regular expressions</div>
+        <div class="concept-card-sub">Find card numbers, phone numbers, and boilerplate in free text.</div>
+      </div>
+      <div class="concept-card" onclick="goTo(2)">
+        <div class="concept-card-num">02</div>
+        <div class="concept-card-title">Rich text &amp; HTML</div>
+        <div class="concept-card-sub">Real ticket bodies are HTML, not plain text. Parse it safely.</div>
+      </div>
+      <div class="concept-card" onclick="goTo(3)">
+        <div class="concept-card-num">03</div>
+        <div class="concept-card-title">Embeddings &amp; similarity</div>
+        <div class="concept-card-sub">Turn text into vectors. Compare meaning, not spelling.</div>
+      </div>
+      <div class="concept-card" onclick="goTo(4)">
+        <div class="concept-card-num">04</div>
+        <div class="concept-card-title">SQL keys &amp; upserts</div>
+        <div class="concept-card-sub">Let the database enforce uniqueness instead of a Python set.</div>
+      </div>
+      <div class="concept-card" onclick="goTo(5)">
+        <div class="concept-card-num">05</div>
+        <div class="concept-card-title">Vector databases</div>
+        <div class="concept-card-sub">Store and search millions of vectors without leaving Postgres.</div>
+      </div>
+      <div class="concept-card" onclick="goTo(6)">
+        <div class="concept-card-num">06</div>
+        <div class="concept-card-title">Docker &amp; docker-compose</div>
+        <div class="concept-card-sub">Run the database as a reproducible, disposable service.</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><strong>How to use this pre-read:</strong> Each page has a <em>Before / After</em> toggle. The Before tab shows a naive approach with a real problem. The After tab shows the correct pattern. Read both — understanding why the Before is wrong is just as important as knowing the After.</div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="nav-btn" disabled>← Previous</button>
+      <button class="nav-btn primary" onclick="goTo(1)">Start: Regular expressions →</button>
+    </div>
+  </section>
+
+
+  <!-- ── 1: Regular expressions ── -->
+  <section class="section" id="sec-1">
+    <div class="section-eyebrow">Concept 1 of 6</div>
+    <h1 class="section-heading">Regular expressions</h1>
+    <p class="section-intro">
+      A support ticket body is free text — a customer types whatever they want. Before you
+      can safely store or embed it, you need to find things inside it: a credit card number,
+      a phone number, an email signature, a boilerplate line like "Sent from my iPhone".
+      <strong>Regular expressions (regex)</strong> are the standard tool for describing
+      "text that looks like this" as a pattern instead of an exact string.
+    </p>
+
+    <h2 class="subsection">The building blocks</h2>
+    <p>A regex is a small pattern language. A handful of tokens cover almost everything you'll need:</p>
+
+    <table>
+      <thead><tr><th>Token</th><th>Matches</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td><code>\d</code></td><td>A single digit</td><td><code>\d\d\d</code> matches <code>"555"</code></td></tr>
+        <tr><td><code>\w</code></td><td>A letter, digit, or underscore</td><td><code>\w+</code> matches <code>"hello_123"</code></td></tr>
+        <tr><td><code>\s</code></td><td>Whitespace (space, tab, newline)</td><td><code>\s+</code> matches one or more spaces</td></tr>
+        <tr><td><code>\b</code></td><td>A word boundary (not a character itself)</td><td><code>\bcat\b</code> matches "cat" but not "category"</td></tr>
+        <tr><td><code>+ / * / ?</code></td><td>One-or-more / zero-or-more / optional</td><td><code>\d{3}[-.\s]\d{4}</code> — quantities and alternatives</td></tr>
+        <tr><td><code>{m,n}</code></td><td>Between m and n repetitions</td><td><code>\d{13,16}</code> matches a 13–16 digit card number</td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="subsection">Compile, search, substitute</h2>
+    <p>In Python, you build a pattern once with <code>re.compile()</code> and reuse it — this is exactly what the pipeline's PII scrubber does.</p>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">python</span><span class="code-label">the pattern behind PII redaction</span></div>
+      <pre><span class="kw">import</span> re
+
+<span class="cm"># A run of 13-16 digits, optionally separated by spaces/dashes</span>
+CARD_RE  = re.<span class="fn">compile</span>(<span class="nm">r</span><span class="st">"\b(?:\d[ -]*?){13,16}\b"</span>)
+<span class="cm"># 3 digits, separator, 3 digits, separator, 4 digits</span>
+PHONE_RE = re.<span class="fn">compile</span>(<span class="nm">r</span><span class="st">"\b\d{3}[-.\s]\d{3}[-.\s]\d{4}\b"</span>)
+
+text = <span class="st">"My card 4111 1111 1111 1111 was charged, call 555-123-4567"</span>
+
+<span class="cm"># .search() tells you IF and WHERE a pattern matches</span>
+<span class="kw">if</span> CARD_RE.search(text):
+    <span class="bi">print</span>(<span class="st">"Found a card number"</span>)
+
+<span class="cm"># .sub() replaces every match</span>
+text = CARD_RE.sub(<span class="st">"[REDACTED_CARD]"</span>, text)
+text = PHONE_RE.sub(<span class="st">"[REDACTED_PHONE]"</span>, text)
+<span class="bi">print</span>(text)
+<span class="cm"># "My card [REDACTED_CARD] was charged, call [REDACTED_PHONE]"</span></pre>
+    </div>
+
+    <h2 class="subsection">Before / After — exact strings vs. patterns</h2>
+    <div class="compare-wrap">
+      <div class="compare-tabs">
+        <button class="compare-tab active-before" onclick="toggle(this,'before','cmp-regex')">❌ Before — hardcoded strings</button>
+        <button class="compare-tab" onclick="toggle(this,'after','cmp-regex')">✓ After — a pattern</button>
+      </div>
+      <div id="cmp-regex-before" class="compare-panel visible">
+        <div class="code-wrap" style="margin-top:0;border-top-left-radius:0;border-top-right-radius:0;">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-label" style="color:var(--red)">problem: only catches the exact formats you thought of</span></div>
+          <pre>text = text.replace(<span class="st">"555-123-4567"</span>, <span class="st">"[REDACTED]"</span>)
+text = text.replace(<span class="st">"4111 1111 1111 1111"</span>, <span class="st">"[REDACTED]"</span>)
+
+<span class="cm"># Next customer writes "555.123.4567" or "4111-1111-1111-1111"</span>
+<span class="cm"># → neither is caught. PII leaks straight into the embedding.</span></pre>
+        </div>
+      </div>
+      <div id="cmp-regex-after" class="compare-panel">
+        <div class="code-wrap" style="margin-top:0;border-top-left-radius:0;border-top-right-radius:0;">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-label" style="color:var(--teal)">solution: describe the shape, not one instance</span></div>
+          <pre>PHONE_RE = re.<span class="fn">compile</span>(<span class="nm">r</span><span class="st">"\b\d{3}[-.\s]\d{3}[-.\s]\d{4}\b"</span>)
+<span class="cm"># [-.\s] matches a dash, dot, OR whitespace — one pattern,</span>
+<span class="cm"># every separator style a customer might type.</span>
+
+<span class="kw">for</span> phone <span class="kw">in</span> [<span class="st">"555-123-4567"</span>, <span class="st">"555.123.4567"</span>, <span class="st">"555 123 4567"</span>]:
+    <span class="bi">print</span>(<span class="bi">bool</span>(PHONE_RE.search(phone)))   <span class="cm"># True, True, True</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><strong>Order matters.</strong> If you clean whitespace <em>after</em> matching a boilerplate phrase like <code>"sent from my iphone"</code>, an extra space introduced anywhere in that phrase (even by an unrelated cleaning step) will make a single-space pattern silently fail to match. Normalize whitespace <em>before</em> running boilerplate/signature patterns, not after.</div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="nav-btn" onclick="goTo(0)">← Overview</button>
+      <button class="nav-btn primary" onclick="goTo(2)">Rich text &amp; HTML →</button>
+    </div>
+  </section>
+
+
+  <!-- ── 2: Rich text & HTML ── -->
+  <section class="section" id="sec-2">
+    <div class="section-eyebrow">Concept 2 of 6</div>
+    <h1 class="section-heading">Rich text &amp; HTML</h1>
+    <p class="section-intro">
+      A support ticket doesn't arrive as clean plain text. Real helpdesk software —
+      Zendesk, Freshdesk, Intercom — submits ticket bodies from a rich-text editor, which
+      means the body you receive is <strong>HTML</strong>: paragraphs, bold text, links,
+      bullet lists, email signatures, and quoted reply chains from earlier messages in the
+      thread. Before you can embed this text for search, you need to turn it back into
+      plain language.
+    </p>
+
+    <h2 class="subsection">What a real ticket body looks like</h2>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">html</span><span class="code-label">raw body, straight from the ticket form</span></div>
+      <pre>&lt;p&gt;My card 4111 1111 1111 1111 was charged twice, call me at 555-123-4567.&lt;/p&gt;
+&lt;br&gt;--&lt;br&gt;Jamie Rivera&lt;br&gt;
+&lt;a href=<span class="st">"mailto:jamie@personalmail.com"</span>&gt;jamie@personalmail.com&lt;/a&gt;
+&lt;blockquote class=<span class="st">"gmail_quote"</span>&gt;On Mar 3, Alex Chen wrote: ...&lt;/blockquote&gt;</pre>
+    </div>
+    <p>Buried in there is the one sentence that actually matters for search — everything else (the signature, the quoted thread) is noise that will confuse a search index if left in.</p>
+
+    <h2 class="subsection">Why regex can't safely strip this</h2>
+    <p>It's tempting to strip tags with a regex like <code>re.sub("&lt;[^&gt;]+&gt;", "", html)</code>. This breaks on real-world HTML: unclosed tags, tags nested inside other tags, and HTML entities (<code>&amp;amp;</code>, <code>&amp;nbsp;</code>) that need decoding, not deleting. HTML is not a <em>regular</em> language — matching nested structure reliably needs an actual parser.</p>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">python</span><span class="code-label">a real parser, not string surgery</span></div>
+      <pre><span class="kw">from</span> bs4 <span class="kw">import</span> BeautifulSoup
+
+<span class="kw">def</span> <span class="fn">strip_html</span>(raw: <span class="bi">str</span>) -> <span class="bi">str</span>:
+    soup = BeautifulSoup(raw, <span class="st">"html.parser"</span>)
+
+    <span class="cm"># Drop tags whose CONTENT should never reach a search index</span>
+    <span class="kw">for</span> tag <span class="kw">in</span> soup([<span class="st">"script"</span>, <span class="st">"style"</span>]):
+        tag.decompose()
+
+    <span class="cm"># Drop quoted prior messages — pure noise for semantic search</span>
+    <span class="kw">for</span> quote <span class="kw">in</span> soup.find_all(<span class="st">"blockquote"</span>):
+        quote.decompose()
+
+    <span class="cm"># get_text() also decodes entities: &amp;amp; -> &amp;, &amp;#39; -> '</span>
+    <span class="kw">return</span> soup.get_text(separator=<span class="st">" "</span>)</pre>
+    </div>
+
+    <h2 class="subsection">Before / After — regex vs. a real parser</h2>
+    <div class="compare-wrap">
+      <div class="compare-tabs">
+        <button class="compare-tab active-before" onclick="toggle(this,'before','cmp-html')">❌ Before — regex tag stripping</button>
+        <button class="compare-tab" onclick="toggle(this,'after','cmp-html')">✓ After — BeautifulSoup</button>
+      </div>
+      <div id="cmp-html-before" class="compare-panel visible">
+        <div class="code-wrap" style="margin-top:0;border-top-left-radius:0;border-top-right-radius:0;">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-label" style="color:var(--red)">problem: breaks on real inboxes</span></div>
+          <pre><span class="kw">import</span> re
+text = re.sub(<span class="nm">r</span><span class="st">"&lt;[^&gt;]+&gt;"</span>, <span class="st">""</span>, html)
+
+<span class="cm"># html = "&lt;p&gt;Wrong item&lt;/p&gt;&lt;style&gt;.x{color:red}&lt;/style&gt;"</span>
+<span class="cm"># → "Wrong item.x{color:red}"  — the CSS text leaks straight through,</span>
+<span class="cm">#   because regex deleted the tags but not what they wrap.</span>
+<span class="cm"># A missing closing tag ("&lt;p&gt;text") breaks the pattern entirely.</span></pre>
+        </div>
+      </div>
+      <div id="cmp-html-after" class="compare-panel">
+        <div class="code-wrap" style="margin-top:0;border-top-left-radius:0;border-top-right-radius:0;">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-label" style="color:var(--teal)">solution: parse structure, then extract text</span></div>
+          <pre>html = <span class="st">'&lt;p&gt;Wrong item&lt;/p&gt;&lt;style&gt;.x{color:red}&lt;/style&gt;'</span>
+soup = BeautifulSoup(html, <span class="st">"html.parser"</span>)
+<span class="kw">for</span> tag <span class="kw">in</span> soup([<span class="st">"style"</span>]):
+    tag.decompose()          <span class="cm"># removes the CSS text WITH its tag</span>
+<span class="bi">print</span>(soup.get_text())     <span class="cm"># "Wrong item" — clean</span>
+
+<span class="cm"># Malformed HTML ("&lt;p&gt;text" with no closing tag)?</span>
+<span class="cm"># The parser tolerates it and still returns "text".</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><strong><code>get_text(separator=" ")</code> inserts a space at every tag boundary</strong> — a phrase split across tags (e.g. a bolded word inside "Sent <code>&lt;strong&gt;</code>from<code>&lt;/strong&gt;</code> my iPhone") comes back with doubled spaces. Normalize whitespace with <code>re.sub(r"\s+", " ", text)</code> right after parsing, before running any further pattern matching.</div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="nav-btn" onclick="goTo(1)">← Regular expressions</button>
+      <button class="nav-btn primary" onclick="goTo(3)">Embeddings &amp; similarity →</button>
+    </div>
+  </section>
+
+
+  <!-- ── 3: Embeddings & similarity ── -->
+  <section class="section" id="sec-3">
+    <div class="section-eyebrow">Concept 3 of 6</div>
+    <h1 class="section-heading">Embeddings &amp; similarity</h1>
+    <p class="section-intro">
+      "Semantic search" means finding tickets that mean the same thing as a query, even if
+      they don't share a single word — <em>"can't log in"</em> should find <em>"password
+      reset broken"</em>. That requires turning text into <strong>vectors</strong> (lists of
+      numbers) positioned so that similar meanings land close together, then measuring
+      "close together" mathematically.
+    </p>
+
+    <h2 class="subsection">From words to numbers: a pretrained sentence model</h2>
+    <p>The simplest approach — <strong>TF-IDF</strong> (term frequency–inverse document frequency) — scores each ticket by which words it contains: common words across the whole dataset ("the", "please") get a low weight, rare-but-frequent-in-this-ticket words ("refund", "crashes") get a high weight. It's a real baseline, but it only ever measures <em>shared vocabulary</em> — two tickets with zero words in common score as completely unrelated, even if they describe the exact same problem.</p>
+    <p>A <strong>pretrained sentence embedding model</strong> solves that differently: instead of counting words, it's a neural network already trained (by someone else, on huge amounts of text) to place sentences with similar <em>meaning</em> near each other in vector space — regardless of which specific words were used. You don't train anything; you just call the model.</p>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">python</span><span class="code-label">text → vector, with an open-source model</span></div>
+      <pre><span class="kw">from</span> sentence_transformers <span class="kw">import</span> SentenceTransformer
+
+<span class="cm"># Downloaded once from the Hugging Face Hub (~90MB), then cached locally —</span>
+<span class="cm"># no API key, no per-call cost, no network needed on later runs.</span>
+model = SentenceTransformer(<span class="st">"sentence-transformers/all-MiniLM-L6-v2"</span>)
+
+texts = [
+    <span class="st">"I can't log in, password incorrect"</span>,
+    <span class="st">"Forgot password email never arrives"</span>,
+    <span class="st">"My order hasn't shipped yet"</span>,
+]
+
+embeddings = model.encode(texts, normalize_embeddings=<span class="kw">True</span>)
+<span class="bi">print</span>(embeddings.shape)   <span class="cm"># (3, 384) — 3 tickets, one 384-number vector each</span></pre>
+    </div>
+
+    <p>One model call replaces TF-IDF's two-step process (build a vocabulary-sized vector, then compress it down). The model was already trained so that its 384-number output <em>is</em> a compact, meaning-aware embedding — nothing to fit on your own dataset first.</p>
+
+    <h2 class="subsection">Measuring "similar": cosine similarity</h2>
+    <p>Once every ticket is a vector, similarity between two tickets is the angle between their vectors — not the distance. Two vectors pointing in almost the same direction represent similar meaning, regardless of length. This is <strong>cosine similarity</strong>, and it's just a dot product once both vectors are unit length:</p>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">python</span><span class="code-label">cosine similarity, step by step</span></div>
+      <pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># normalize_embeddings=True above already L2-normalized every vector</span>
+<span class="cm"># to length 1 — so a plain dot product between two of them IS the</span>
+<span class="cm"># cosine of the angle between them: 1.0 = identical meaning, 0 = unrelated.</span>
+similarity = np.dot(embeddings[<span class="nm">0</span>], embeddings[<span class="nm">1</span>])
+<span class="bi">print</span>(similarity)   <span class="cm"># e.g. 0.61 — "can't log in" and "forgot password" are related</span>
+<span class="cm">#                     even though they share only one real word ("password")</span></pre>
+    </div>
+
+    <h2 class="subsection">Before / After — keyword match vs. semantic search</h2>
+    <div class="compare-wrap">
+      <div class="compare-tabs">
+        <button class="compare-tab active-before" onclick="toggle(this,'before','cmp-embed')">❌ Before — substring match</button>
+        <button class="compare-tab" onclick="toggle(this,'after','cmp-embed')">✓ After — vector similarity</button>
+      </div>
+      <div id="cmp-embed-before" class="compare-panel visible">
+        <div class="code-wrap" style="margin-top:0;border-top-left-radius:0;border-top-right-radius:0;">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-label" style="color:var(--red)">problem: misses every paraphrase</span></div>
+          <pre>query = <span class="st">"cant log in, password reset broken"</span>
+
+<span class="kw">for</span> ticket <span class="kw">in</span> tickets:
+    <span class="kw">if</span> query.lower() <span class="kw">in</span> ticket.lower():
+        results.append(ticket)
+
+<span class="cm"># Ticket: "Forgot password email never shows up in my inbox"</span>
+<span class="cm"># → NOT matched. Not one substring in common with the query,</span>
+<span class="cm">#   even though it's exactly the issue the customer is describing.</span></pre>
+        </div>
+      </div>
+      <div id="cmp-embed-after" class="compare-panel">
+        <div class="code-wrap" style="margin-top:0;border-top-left-radius:0;border-top-right-radius:0;">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-label" style="color:var(--teal)">solution: compare meaning, via vectors</span></div>
+          <pre>query_vec = embed_query(<span class="st">"cant log in, password reset broken"</span>)
+
+scores = embeddings @ query_vec   <span class="cm"># cosine similarity vs. every ticket</span>
+best = np.argsort(-scores)[:<span class="nm">5</span>]
+
+<span class="cm"># "Forgot password email never shows up in my inbox" scores 0.71 —</span>
+<span class="cm"># no shared words, but the vectors point in nearly the same direction.</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><strong>Why an open-source Hugging Face model, and not a paid API?</strong> <code>sentence-transformers/all-MiniLM-L6-v2</code> runs entirely on your own machine — no API key, no per-call cost, and no data ever leaves the box. It downloads once (~90MB) and every run after that is fully offline. A hosted embeddings API (OpenAI, Anthropic) can produce higher-quality vectors at the cost of latency, spend, and sending ticket text to a third party — swapping to one later touches only <code>embed.py</code>, since the rest of the pipeline just expects "a fixed-size vector in, a fixed-size vector out."</div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><strong>TF-IDF isn't obsolete.</strong> It's cheaper to compute, needs no model download, and is easier to debug (you can point at exactly which shared word drove a match). For a support desk where customers mostly reuse the product's own terminology, it can be good enough. Neural embeddings earn their cost when paraphrasing is common — which, for free-text customer complaints, it usually is.</div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="nav-btn" onclick="goTo(2)">← Rich text &amp; HTML</button>
+      <button class="nav-btn primary" onclick="goTo(4)">SQL keys &amp; upserts →</button>
+    </div>
+  </section>
+
+
+  <!-- ── 4: SQL keys & upserts ── -->
+  <section class="section" id="sec-4">
+    <div class="section-eyebrow">Concept 4 of 6</div>
+    <h1 class="section-heading">SQL keys &amp; upserts</h1>
+    <p class="section-intro">
+      Every stage of the pipeline reads from one table and writes to another — raw tickets,
+      validated tickets, cleaned chunks, embeddings. Two relational-database ideas make that
+      reliable in a way a Python list or a flat file never can: <strong>primary keys</strong>
+      that make duplicates impossible, and <strong>upserts</strong> that make re-running the
+      pipeline safe.
+    </p>
+
+    <h2 class="subsection">Primary keys: let the database refuse duplicates</h2>
+    <p>Instead of tracking "have I seen this ID before?" with a Python <code>set</code>, a <code>PRIMARY KEY</code> constraint makes the database itself reject a duplicate — it can't be forgotten or skipped by a bug in application code.</p>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">sql</span><span class="code-label">a constraint instead of a Python set</span></div>
+      <pre><span class="kw">CREATE TABLE</span> tickets_validated (
+    ticket_id TEXT <span class="kw">PRIMARY KEY</span>,   <span class="cm">-- no two rows can share a ticket_id</span>
+    body TEXT,
+    category TEXT
+);
+
+<span class="cm">-- Inserting a ticket_id that already exists raises an error —</span>
+<span class="cm">-- the constraint is enforced by Postgres, every time, no exceptions.</span></pre>
+    </div>
+
+    <h2 class="subsection">Upserts: rerun safely</h2>
+    <p>A ticket gets edited, or you fix a bug in the cleaning logic and want to reprocess. You don't want to wipe the whole table and start over, and you don't want a plain <code>INSERT</code> to fail because the row already exists. <code>ON CONFLICT ... DO UPDATE</code> — an <strong>upsert</strong> — does the right thing either way: insert if new, update if it already exists.</p>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">sql</span><span class="code-label">insert-or-update in one statement</span></div>
+      <pre><span class="kw">INSERT INTO</span> tickets_validated (ticket_id, body, category)
+<span class="kw">VALUES</span> (<span class="nm">%s</span>, <span class="nm">%s</span>, <span class="nm">%s</span>)
+<span class="kw">ON CONFLICT</span> (ticket_id) <span class="kw">DO UPDATE SET</span>
+    body     = <span class="kw">EXCLUDED</span>.body,
+    category = <span class="kw">EXCLUDED</span>.category;
+
+<span class="cm">-- Run this pipeline once, or a hundred times, on the same data:</span>
+<span class="cm">-- the table ends up in exactly the same state either way.</span></pre>
+    </div>
+
+    <h2 class="subsection">Before / After — Python-side dedup vs. a database constraint</h2>
+    <div class="compare-wrap">
+      <div class="compare-tabs">
+        <button class="compare-tab active-before" onclick="toggle(this,'before','cmp-sql')">❌ Before — full-refresh every run</button>
+        <button class="compare-tab" onclick="toggle(this,'after','cmp-sql')">✓ After — targeted upsert</button>
+      </div>
+      <div id="cmp-sql-before" class="compare-panel visible">
+        <div class="code-wrap" style="margin-top:0;border-top-left-radius:0;border-top-right-radius:0;">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-label" style="color:var(--red)">problem: reprocesses everything, every time</span></div>
+          <pre>conn.execute(<span class="st">"TRUNCATE ticket_chunks"</span>)
+<span class="kw">for</span> record <span class="kw">in</span> all_validated_records:
+    insert_chunk(record)   <span class="cm"># re-inserts every row, even unchanged ones</span>
+
+<span class="cm"># Fine for a small nightly batch. At scale, this means</span>
+<span class="cm"># re-cleaning and re-embedding millions of unchanged tickets</span>
+<span class="cm"># just to pick up ten edited ones.</span></pre>
+        </div>
+      </div>
+      <div id="cmp-sql-after" class="compare-panel">
+        <div class="code-wrap" style="margin-top:0;border-top-left-radius:0;border-top-right-radius:0;">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-label" style="color:var(--teal)">solution: upsert on the natural key</span></div>
+          <pre><span class="kw">for</span> record <span class="kw">in</span> all_validated_records:
+    cur.execute(<span class="st">"""</span>
+<span class="st">        INSERT INTO ticket_chunks (chunk_id, text)</span>
+<span class="st">        VALUES (%s, %s)</span>
+<span class="st">        ON CONFLICT (chunk_id) DO UPDATE SET text = EXCLUDED.text</span>
+<span class="st">    """</span>, (record.chunk_id, record.text))
+
+<span class="cm"># Unchanged rows: a no-op update. Changed rows: updated in place.</span>
+<span class="cm"># New rows: inserted. One statement handles all three cases.</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><strong>Not every table wants an upsert.</strong> A landing zone that holds raw, as-ingested data is usually fine to fully refresh (<code>TRUNCATE</code> + re-insert) each run — it's a copy of the source, not a record you're incrementally correcting. Reserve upserts for tables downstream that represent "the current best version of this record."</div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="nav-btn" onclick="goTo(3)">← Embeddings &amp; similarity</button>
+      <button class="nav-btn primary" onclick="goTo(5)">Vector databases →</button>
+    </div>
+  </section>
+
+
+  <!-- ── 5: Vector databases ── -->
+  <section class="section" id="sec-5">
+    <div class="section-eyebrow">Concept 5 of 6</div>
+    <h1 class="section-heading">Vector databases</h1>
+    <p class="section-intro">
+      Once every ticket is a vector, you need somewhere to store all of them and a fast way
+      to ask "which vectors are closest to this one?". A <strong>vector database</strong>
+      answers that question at scale. <strong>pgvector</strong> is a Postgres extension that
+      adds a vector column type and nearest-neighbor search directly into a database you
+      already know — no separate service to run and keep in sync.
+    </p>
+
+    <h2 class="subsection">A column type for vectors</h2>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">sql</span><span class="code-label">enabling pgvector</span></div>
+      <pre><span class="kw">CREATE EXTENSION IF NOT EXISTS</span> vector;
+
+<span class="kw">CREATE TABLE</span> ticket_embeddings (
+    chunk_id  TEXT <span class="kw">PRIMARY KEY</span>,
+    embedding vector(<span class="nm">384</span>)   <span class="cm">-- a fixed-size numeric vector, stored as a real column</span>
+);</pre>
+    </div>
+
+    <h2 class="subsection">Distance operators</h2>
+    <p>pgvector adds operators that compute distance between two vectors directly in SQL. This project's embeddings are L2-normalized, so cosine distance (<code>&lt;=&gt;</code>) is the natural fit — <code>similarity = 1 - distance</code>.</p>
+
+    <table>
+      <thead><tr><th>Operator</th><th>Distance metric</th></tr></thead>
+      <tbody>
+        <tr><td><code>&lt;-&gt;</code></td><td>Euclidean (L2) distance</td></tr>
+        <tr><td><code>&lt;=&gt;</code></td><td>Cosine distance</td></tr>
+        <tr><td><code>&lt;#&gt;</code></td><td>Negative inner product</td></tr>
+      </tbody>
+    </table>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">sql</span><span class="code-label">nearest neighbors, in SQL</span></div>
+      <pre><span class="kw">SELECT</span> chunk_id, text, <span class="nm">1</span> - (embedding &lt;=&gt; <span class="nm">%s</span>) <span class="kw">AS</span> score
+<span class="kw">FROM</span> ticket_embeddings
+<span class="kw">JOIN</span> ticket_chunks <span class="kw">USING</span> (chunk_id)
+<span class="kw">ORDER BY</span> embedding &lt;=&gt; <span class="nm">%s</span>
+<span class="kw">LIMIT</span> <span class="nm">5</span>;
+<span class="cm">-- %s is the query vector, bound once and reused for both the</span>
+<span class="cm">-- score calculation and the ORDER BY that finds the nearest rows</span></pre>
+    </div>
+
+    <h2 class="subsection">Indexing for scale</h2>
+    <p>At a few hundred rows, comparing the query against every row (a sequential scan) is instant. At millions of rows it isn't — you need an approximate-nearest-neighbor index, like <strong>HNSW</strong>, so Postgres can find the closest vectors without checking all of them.</p>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">sql</span><span class="code-label">an index built for this exact query shape</span></div>
+      <pre><span class="kw">CREATE INDEX</span> ON ticket_embeddings
+    <span class="kw">USING</span> hnsw (embedding vector_cosine_ops);
+<span class="cm">-- vector_cosine_ops here MUST match the &lt;=&gt; operator used in queries —</span>
+<span class="cm">-- an index built for one distance metric won't be used for another.</span></pre>
+    </div>
+
+    <h2 class="subsection">Before / After — searching in Python vs. in the database</h2>
+    <div class="compare-wrap">
+      <div class="compare-tabs">
+        <button class="compare-tab active-before" onclick="toggle(this,'before','cmp-vec')">❌ Before — load everything, loop in Python</button>
+        <button class="compare-tab" onclick="toggle(this,'after','cmp-vec')">✓ After — push the search into SQL</button>
+      </div>
+      <div id="cmp-vec-before" class="compare-panel visible">
+        <div class="code-wrap" style="margin-top:0;border-top-left-radius:0;border-top-right-radius:0;">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-label" style="color:var(--red)">problem: doesn't scale past what fits in memory</span></div>
+          <pre>all_rows = cur.execute(<span class="st">"SELECT * FROM ticket_embeddings"</span>).fetchall()
+<span class="cm"># every embedding, loaded into a Python process, every query</span>
+
+scores = [cosine_sim(row.embedding, query_vec) <span class="kw">for</span> row <span class="kw">in</span> all_rows]
+top5 = sorted(<span class="bi">zip</span>(scores, all_rows))[-<span class="nm">5</span>:]
+<span class="cm"># fine at 300 rows; falls over long before 10 million</span></pre>
+        </div>
+      </div>
+      <div id="cmp-vec-after" class="compare-panel">
+        <div class="code-wrap" style="margin-top:0;border-top-left-radius:0;border-top-right-radius:0;">
+          <div class="code-header"><span class="code-lang">python</span><span class="code-label" style="color:var(--teal)">solution: let the database + index do the work</span></div>
+          <pre>cur.execute(<span class="st">"""</span>
+<span class="st">    SELECT chunk_id, 1 - (embedding &lt;=&gt; %s) AS score</span>
+<span class="st">    FROM ticket_embeddings ORDER BY embedding &lt;=&gt; %s LIMIT 5</span>
+<span class="st">"""</span>, (query_vec, query_vec))
+top5 = cur.fetchall()
+<span class="cm"># Postgres uses the HNSW index; only ever returns the 5 rows you need</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="nav-btn" onclick="goTo(4)">← SQL keys &amp; upserts</button>
+      <button class="nav-btn primary" onclick="goTo(6)">Docker &amp; docker-compose →</button>
+    </div>
+  </section>
+
+
+  <!-- ── 6: Docker & docker-compose ── -->
+  <section class="section" id="sec-6">
+    <div class="section-eyebrow">Concept 6 of 6</div>
+    <h1 class="section-heading">Docker &amp; docker-compose</h1>
+    <p class="section-intro">
+      This pipeline needs a Postgres database with the pgvector extension installed —
+      something most machines don't have out of the box, and something you don't want to
+      hand-install and configure differently on every laptop. <strong>Docker</strong> packages
+      a piece of software and everything it needs to run into one reproducible unit; a
+      <strong>container</strong> is that unit, running.
+    </p>
+
+    <h2 class="subsection">Declaring a service with docker-compose</h2>
+    <p><code>docker-compose.yml</code> describes what to run, declaratively: which image, which ports, which environment variables, and which data should survive a restart.</p>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">yaml</span><span class="code-label">docker-compose.yml</span></div>
+      <pre><span class="nm">services</span>:
+  <span class="nm">postgres</span>:
+    <span class="nm">image</span>: pgvector/pgvector:pg16      <span class="cm"># Postgres, with pgvector already installed</span>
+    <span class="nm">environment</span>:
+      <span class="nm">POSTGRES_DB</span>: support_tickets
+      <span class="nm">POSTGRES_USER</span>: pipeline
+      <span class="nm">POSTGRES_PASSWORD</span>: pipeline
+    <span class="nm">ports</span>:
+      - <span class="st">"5433:5432"</span>                    <span class="cm"># host_port:container_port</span>
+    <span class="nm">volumes</span>:
+      - <span class="nm">pgdata</span>:/var/lib/postgresql/data  <span class="cm"># named volume — survives container restarts</span>
+
+<span class="nm">volumes</span>:
+  <span class="nm">pgdata</span>:</pre>
+    </div>
+
+    <h2 class="subsection">The commands you'll actually run</h2>
+    <table>
+      <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><code>docker compose up -d</code></td><td>Start the service in the background</td></tr>
+        <tr><td><code>docker compose ps</code></td><td>Check whether it's running (and healthy)</td></tr>
+        <tr><td><code>docker compose logs</code></td><td>See what the container has printed</td></tr>
+        <tr><td><code>docker compose down</code></td><td>Stop and remove the container (data survives — it's in the volume)</td></tr>
+        <tr><td><code>docker compose down -v</code></td><td>Stop <em>and delete the volume</em> — all data is gone</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><strong>Port mapping reads right-to-left in your head, left-to-right on the page.</strong> <code>"5433:5432"</code> means: the container's internal Postgres (always on <code>5432</code>) is reachable from your machine on <code>5433</code>. If a machine already runs a native Postgres on the default port <code>5432</code> — common in a course environment with other projects — mapping the container to a different host port avoids a conflict entirely.</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><strong>The volume is the database.</strong> The container itself is disposable — stop it, delete it, recreate it, and as long as the named volume (<code>pgdata</code>) still exists, your data is untouched. <code>down -v</code> is the one command that actually deletes it, which is why it's worth pausing before you run it.</div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="nav-btn" onclick="goTo(5)">← Vector databases</button>
+      <button class="nav-btn primary" onclick="goTo(7)">Putting it together →</button>
+    </div>
+  </section>
+
+
+  <!-- ── 7: Putting it together ── -->
+  <section class="section" id="sec-7">
+    <div class="section-eyebrow">Concept 7 of 7</div>
+    <h1 class="section-heading">Putting it all together</h1>
+    <p class="section-intro">
+      Every concept from this pre-read shows up in one of the pipeline's six stages.
+      Read the flow below and find each pattern: the regex that redacts PII, the parser
+      that turns rich text back into plain language, the embeddings that make search
+      semantic, the SQL constraints that make reruns safe, and the vector index that makes
+      search fast — all wrapped by Postgres running in a container.
+    </p>
+
+    <div class="callout goal">
+      <span class="callout-icon">🎯</span>
+      <div><strong>Before Week 6 class:</strong> read through this flow until you can describe what each stage does in plain English. You don't need to memorize any file — you need to understand the shape.</div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">text</span><span class="code-label">support_ticket_pipeline — the six stages</span></div>
+      <pre><span class="cm">tickets_raw.csv (rich-text HTML bodies, deliberately messy)</span>
+        │
+        ▼
+<span class="fn">ingest.py</span>            <span class="cm">→ tickets_raw           (landing zone, full-refresh)</span>
+        │
+        ▼
+<span class="fn">validate.py</span>          <span class="cm">→ tickets_validated     (regex PII redaction, upsert)</span>
+        │                    <span class="cm">→ tickets_rejected      (schema/content failures, logged)</span>
+        ▼
+<span class="fn">clean_transform.py</span>   <span class="cm">→ ticket_chunks         (HTML stripped, signatures cut, upsert)</span>
+        │
+        ▼
+<span class="fn">embed.py</span>             <span class="cm">→ ticket_embeddings     (HuggingFace model vectors, pgvector column)</span>
+        │
+        ▼
+<span class="fn">vector_store.py</span>      <span class="cm">→ cosine search pushed into SQL, HNSW-indexed</span>
+        │
+        ▼
+<span class="fn">query.py</span>             <span class="cm">→ "find me tickets like this one" — the CLI you'll actually run</span></pre>
+    </div>
+
+    <h2 class="subsection">Where each concept lives in the pipeline</h2>
+    <ul class="check-list">
+      <li><strong>Regular expressions:</strong> <code>validate.py</code> redacts card numbers, phone numbers, and emails; <code>clean_transform.py</code> strips boilerplate signatures with the same tool</li>
+      <li><strong>Rich text &amp; HTML:</strong> <code>html_utils.py</code> parses every ticket body with BeautifulSoup before anything downstream sees it</li>
+      <li><strong>Embeddings &amp; similarity:</strong> <code>embed.py</code> encodes every ticket with the open-source <code>sentence-transformers/all-MiniLM-L6-v2</code> model; every query is compared by cosine similarity</li>
+      <li><strong>SQL keys &amp; upserts:</strong> every table after the landing zone is keyed on a natural id and upserted with <code>ON CONFLICT ... DO UPDATE</code></li>
+      <li><strong>Vector databases:</strong> <code>ticket_embeddings</code> is a pgvector column with an HNSW index; <code>vector_store.py</code> pushes the whole search into one SQL query</li>
+      <li><strong>Docker &amp; docker-compose:</strong> <code>docker-compose.yml</code> brings up Postgres+pgvector as one disposable, reproducible service</li>
+    </ul>
+
+    <div class="callout goal">
+      <span class="callout-icon">🎯</span>
+      <div><strong>You're ready for Week 6</strong> when you can trace a single ticket through all six stages and explain, at each arrow, what changed and why. In class, you will run this pipeline end to end and query it with your own questions.</div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="nav-btn" onclick="goTo(6)">← Docker &amp; docker-compose</button>
+      <button class="nav-btn" style="opacity:0.3;pointer-events:none;">End of pre-read</button>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  const TOTAL = 8;
+  let visited = new Set([0]);
+
+  function goTo(idx) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach((n, i) => {
+      n.classList.remove('active');
+      if (visited.has(i) && i !== idx) n.classList.add('done');
+      else n.classList.remove('done');
+    });
+
+    const sec = document.getElementById('sec-' + idx);
+    if (sec) sec.classList.add('active');
+
+    const navItems = document.querySelectorAll('.nav-item');
+    if (navItems[idx]) navItems[idx].classList.add('active');
+
+    visited.add(idx);
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function updateProgress() {
+    const pct = Math.round((visited.size / TOTAL) * 100);
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-text').textContent = visited.size + ' / ' + TOTAL;
+  }
+
+  function toggle(btn, side, id) {
+    const wrap = btn.closest('.compare-wrap');
+    wrap.querySelectorAll('.compare-panel').forEach(p => p.classList.remove('visible'));
+    wrap.querySelectorAll('.compare-tab').forEach(t => {
+      t.classList.remove('active-before', 'active-after');
+    });
+    document.getElementById(id + '-' + side).classList.add('visible');
+    btn.classList.add('active-' + side);
+  }
+
+  updateProgress();
+</script>
+</body>
+</html>
