@@ -1,0 +1,10 @@
+numpy
+pandas
+sentence-transformers
+beautifulsoup4
+psycopg[binary]
+pgvector
+fastapi
+uvicorn[standard]
+google-genai
+python-dotenv

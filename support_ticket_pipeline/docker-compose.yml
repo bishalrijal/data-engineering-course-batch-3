@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: support_tickets
+      POSTGRES_USER: pipeline
+      POSTGRES_PASSWORD: pipeline
+    ports:
+      # Mapped to 5433 on the host — this machine already runs a native
+      # Postgres on 5432 for other coursework, so this stays out of its way.
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pipeline -d support_tickets"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
