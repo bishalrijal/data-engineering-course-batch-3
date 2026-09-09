@@ -23,20 +23,37 @@ logger = logging.getLogger(__name__)
 # ── Database config ────────────────────────────────────────────────────────
 DB_CONFIG = dict(
     host="localhost", port=5432,
-    dbname="ride_share", user="postgres", password="postgres"
+    dbname="postgres", user="postgres", password="kri@2004"
 )
 
 # TODO: fill in each query to match Q6 / Q7 / Q8 from sql_assignment.md
 REVENUE_BY_CITY_QUERY = """
-    -- Q6: pickup_city, total_rides, total_revenue, avg_fare
+SELECT pickup_city,
+       COUNT(*) AS total_rides,
+       SUM(fare_amount) AS total_revenue,
+       ROUND(AVG(fare_amount),2) AS avg_fare
+FROM rides
+GROUP BY pickup_city
+ORDER BY total_revenue DESC;
 """
 
 LOYALTY_BONUS_QUERY = """
-    -- Q7: driver_name, completed_rides — more than 100 completed rides
+SELECT driver_name,
+       COUNT(*) AS completed_rides
+FROM rides
+WHERE ride_status = 'completed'
+GROUP BY driver_name
+HAVING COUNT(*) > 100
+ORDER BY completed_rides DESC;
 """
 
 OUTCOMES_BY_STATUS_QUERY = """
-    -- Q8: ride_status, ride_count, avg_distance_km
+SELECT ride_status,
+       COUNT(*) AS ride_count,
+       ROUND(AVG(ride_distance_km),2) AS avg_distance_km
+FROM rides
+GROUP BY ride_status
+ORDER BY ride_count DESC;
 """
 
 
@@ -57,18 +74,20 @@ def run_query(conn, query, label):
 
 def print_revenue_by_city(rows):
     print("\n-- Revenue by pickup city --")
-    # TODO: loop over rows and print each one formatted, e.g.
-    # f"{city:<15} | rides: {count:>4} | revenue: NPR {revenue:,.2f} | avg fare: NPR {avg_fare:,.2f}"
+    for city, count, revenue, avg_fare in rows:
+     print(f"{city:<15} | rides: {count:>4} | revenue: NPR {revenue:,.2f} | avg fare: NPR {avg_fare:,.2f}")
 
 
 def print_loyalty_bonus(rows):
     print("\n-- Drivers who qualify for the loyalty bonus --")
-    # TODO: loop over rows and print each one formatted
+    for driver, completed_rides in rows:
+     print(f"{driver:<25} | completed rides: {completed_rides}")
 
 
 def print_outcomes_by_status(rows):
     print("\n-- Ride outcomes by status --")
-    # TODO: loop over rows and print each one formatted
+    for status, ride_count, avg_distance in rows:
+     print(f"{status:<12} | rides: {ride_count:>4} | avg distance: {avg_distance:.2f} km")
 
 
 def main():
