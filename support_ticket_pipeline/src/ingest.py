@@ -27,7 +27,6 @@ def ingest():
             f"{RAW_SOURCE} not found — run `python src/generate_data.py` first."
         )
 
-    db.init_db()
     load_ts = datetime.datetime.now(datetime.timezone.utc)
     conn = db.get_conn()
     count = 0

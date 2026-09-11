@@ -102,6 +102,7 @@ embeddings with it.
 ```bash
 python src/generate_data.py     # creates data/raw/tickets_raw.csv (~275 tickets,
                                  # with deliberately broken records mixed in)
+python src/db.py
 python src/pipeline.py --day 1  # runs ingest -> validate -> clean_transform
 ```
 

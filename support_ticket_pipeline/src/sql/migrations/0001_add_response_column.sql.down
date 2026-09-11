@@ -1,0 +1,8 @@
+-- Adds `response` (the agent's resolution) to tables created by a version
+-- of schema.sql from before this column existed. Idempotent — a no-op once
+-- the column is already there. A fresh database gets `response` straight
+-- from schema.sql above; this file exists only for databases that predate
+-- it (e.g. one built during Day 1/Day 2 before Stage 7's chatbot was added).
+ALTER TABLE tickets_raw DROP COLUMN IF  EXISTS response TEXT;
+ALTER TABLE tickets_validated ADD COLUMN IF NOT EXISTS response TEXT;
+ALTER TABLE ticket_chunks ADD COLUMN IF NOT EXISTS response TEXT;
